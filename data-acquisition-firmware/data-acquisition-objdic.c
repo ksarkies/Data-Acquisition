@@ -1,0 +1,86 @@
+/** @brief Definition of CANopen Object Dictionary Variables
+
+These are made available to an external PC and to other processing modules
+which may be CANopen devices or tasks running on the same microcontroller.
+
+Note these definitions cannot be placed in the header file.
+*/
+
+/*
+ * This file is part of the battery-management-system project.
+ *
+ * Copyright 2013 K. Sarkies <ksarkies@internode.on.net>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/**@{*/
+
+#include <stdint.h>
+#include <stdbool.h>
+
+#include "data-acquisition-objdic.h"
+#include "../libs/hardware.h"
+
+/* Byte pattern that indicates if a valid NVM config data block is present */
+#define VALID_BLOCK                 0xD5
+
+/*--------------------------------------------------------------------------*/
+/* Preset the config data block in FLASH to a given pattern to indicate unused. */
+union ConfigGroup configDataBlock __attribute__ ((section (".configBlock"))) = {{0xA5}};
+union ConfigGroup configData;
+
+/*--------------------------------------------------------------------------*/
+/** @brief Initialise Global Configuration Variables
+
+This determines if configuration variables are present in NVM, and if so
+reads them in. The first entry is checked against a preprogrammed value to
+determine if the block is a valid configuration block. This allows the program
+to determine whether to use the block stored in FLASH or to use defaults.
+*/
+
+void setGlobalDefaults(void)
+{
+    flashReadData((uint32_t*)configDataBlock.data,
+                   configData.data,sizeof(configData.config));
+    if (configData.config.validBlock == VALID_BLOCK) return;
+/* Set default communications control variables */
+    configData.config.measurementSend = true;
+    configData.config.debugMessageSend = false;
+    configData.config.enableSend = true;
+/* Set default recording control variables */
+    configData.config.recording = false;
+}
+
+/*--------------------------------------------------------------------------*/
+/** @brief Write Configuration Data Block to Flash
+
+Refer to the linker script for allocation of the config data block on a
+page boundary. If this is not done, a page erase may destroy valid data or code.
+
+The current datablock is written to flash with the first entry set to a value
+that indicates whether the block is a valid programmed configuration block.
+
+@returns uint32_t result code. 0 success, 1 fail.
+*/
+
+uint32_t writeConfigBlock(void)
+{
+    configData.config.validBlock = VALID_BLOCK;
+    return flashWriteData((uint32_t*)configDataBlock.data,
+                          configData.data, sizeof(configData.config));
+}
+
+/**@}*/
+
