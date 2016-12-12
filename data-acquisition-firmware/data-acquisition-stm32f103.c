@@ -54,13 +54,21 @@ Initial 23 November 2016
 #include "../libs/buffer.h"
 #include "../libs/hardware.h"
 #include "../libs/comms.h"
+#include "../libs/file.h"
 #include "data-acquisition-stm32f103.h"
 #include "data-acquisition-objdic.h"
+
+#include "ff.h"
 
 /* Local Prototypes */
 static void parseCommand(uint8_t* line);
 
 /* Globals */
+static char writeFileName[12];
+static char readFileName[12];
+static uint8_t writeFileHandle;
+static uint8_t readFileHandle;
+
 /* These configuration variables are part of the Object Dictionary. */
 /* This is defined in power-management-objdic and is updated in response to
 received messages. */
@@ -76,11 +84,14 @@ int main(void)
     setGlobalDefaults();
 	clock_setup();
 	gpio_setup();
+    systickSetup();
 //	adc_setup();
-//	dma_setup();
+	dma_adc_setup();
 	usart1_setup();
     init_comms_buffers();
-    init_file();
+    uint8_t status = init_file();
+    writeFileHandle = 0xFF;
+    readFileHandle = 0xFF;
 
 /* Main event loop */
 	while (1)
@@ -228,9 +239,60 @@ Data is not written to the file externally. */
             case 'F':
             {
                 uint32_t freeClusters = 0;
-                uint32_t sectorCluster = 0;
-                uint8_t fileStatus = get_free_clusters(&freeClusters, &sectorCluster);
-                dataMessageSend("fF",freeClusters,sectorCluster);
+                uint32_t sectorsPerCluster = 0;
+                uint8_t fileStatus = get_free_clusters(&freeClusters, &sectorsPerCluster);
+                dataMessageSend("fF",freeClusters,sectorsPerCluster);
+                sendResponse("fE",(uint8_t)fileStatus);
+                break;
+            }
+/* d[d] Directory listing, d is the d=directory name. Get the first (if d
+present) or next entry in the directory. If the name has a zero in the first
+position, return the next entry in the directory listing. Returns the type,
+size and name preceded by a comma. If there are no further entries found in the
+directory, then size and name are not sent back. The type character can be:
+ f = file, d = directory, n = error e = end */
+            case 'd':
+            {
+                char fileName[20];
+                char type;
+                uint32_t size;
+                uint8_t fileStatus =
+                    read_directory_entry(line+2, &type, &size, fileName);
+                char dirInfo[20];
+                dirInfo[0] = type;
+                dirInfo[1] = 0;
+                if (type != 'e')
+                {
+                    char fileSize[5];
+                    hexToAscii((size >> 16) & 0xFFFF,fileSize);
+                    stringAppend(dirInfo,fileSize);
+                    hexToAscii(size & 0xFFFF,fileSize);
+                    stringAppend(dirInfo,fileSize);
+                    stringAppend(dirInfo,fileName);
+                }
+                sendString("fd",dirInfo);
+                sendResponse("fE",(uint8_t)fileStatus);
+                break;
+            }
+/* Wf Open a file f=filename for writing less than 12 characters.
+Parameter is a filename, 8 character plus dot plus 3 character extension.
+Returns a file handle. On error, file handle is 0xFF. */
+            case 'W':
+            {
+
+                if (stringLength((char*)line+2) < 12)
+                {
+                    uint8_t fileStatus = FR_INT_ERR;
+                    stringCopy(writeFileName,(char*)line+2);
+                    sendResponse("fW",writeFileHandle);
+                    sendResponse("fE",(uint8_t)fileStatus);
+                }
+                break;
+            }
+/* M Reinitialize the memory card. */
+            case 'M':
+            {
+                uint8_t fileStatus = init_file();
                 sendResponse("fE",(uint8_t)fileStatus);
                 break;
             }
@@ -250,28 +312,4 @@ void adc1_2_isr(void)
 }
 
 /*--------------------------------------------------------------------------*/
-/* USART ISR
-
-Find out what interrupted and get or send data as appropriate.
-*/
-
-void usart1_isr(void)
-{
-	static uint16_t data;
-
-/* Check if we were called because of RXNE. */
-	if (usart_get_flag(USART1,USART_SR_RXNE))
-	{
-/* If buffer full we'll just drop it */
-		put_to_receive_buffer((uint8_t) usart_recv(USART1));
-	}
-/* Check if we were called because of TXE. */
-	if (usart_get_flag(USART1,USART_SR_TXE))
-	{
-/* If buffer empty, disable the tx interrupt */
-		data = get_from_send_buffer();
-		if ((data & 0xFF00) > 0) usart_disable_tx_interrupt(USART1);
-		else usart_send(USART1, (data & 0xFF));
-	}
-}
 

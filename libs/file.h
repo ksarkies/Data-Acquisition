@@ -31,8 +31,10 @@ K. Sarkies, 10 December 2016
 /* Prototypes */
 /*--------------------------------------------------------------------------*/
 
-void init_file(void);
-uint8_t get_free_clusters(uint32_t* freeClusters, uint32_t* sectorCluster);
+uint8_t init_file(void);
+uint8_t get_free_clusters(uint32_t* freeClusters, uint32_t* clusterSize);
+uint8_t read_directory_entry(char* directoryName, char* type, uint32_t* size,
+                             char* fileName);
 
 #endif
 

@@ -47,8 +47,8 @@ Only the two ET boards have been tested.
 
 //#define STM32_SD_USE_DMA
 
-#define USE_ET_STAMP_STM32
-//#define USE_ET_STM32F103
+//#define USE_ET_STAMP_STM32
+#define USE_ET_STM32F103
 //#define USE_EK_STM32F
 //#define USE_STM32_P103
 //#define USE_MINI_STM32

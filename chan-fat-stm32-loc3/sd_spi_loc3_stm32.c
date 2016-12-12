@@ -530,7 +530,7 @@ peripheral will not send any data out.
 
 /* drain SPI */
 	while (!(SPI_SR(SPI_SD) & SPI_SR_TXE));
-	dummyread = SPI_DR(SPI_SD);
+//	dummyread = SPI_DR(SPI_SD);
 
 #ifdef STM32_SD_USE_DMA
 	/* enable DMA clock */
@@ -1135,7 +1135,7 @@ DRESULT disk_ioctl(BYTE drv,BYTE ctrl,void *buff)
 /** @brief Device Timer Interrupt Procedure
 
 This function must be called in period of 10ms, generally by the systick ISR.
-It counts down two timers and checks for write protect and card presence
+It counts up a timer and checks for write protect and card presence.
 
 Globals Stat: DSTATUS disk status.
         Timer1: DWORD a real-time variable used to trigger events.

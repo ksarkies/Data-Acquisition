@@ -44,6 +44,7 @@ K. Sarkies, 10 December 2016
 #include <libopencm3/cm3/nvic.h>
 #include "buffer.h"
 #include "hardware.h"
+#include "comms.h"
 
 #define  _BV(bit) (1 << (bit))
 
@@ -55,6 +56,13 @@ extern uint32_t __configBlockEnd;
 
 /* Local Variables */
 static uint32_t v[NUM_CHANNEL]; /* Buffer used by DMA to dump A/D conversions */
+
+/* Time variables needed when systick is the timer */
+static uint32_t secondsCount;
+static uint32_t millisecondsCount;
+
+/* This is provided in the FAT filesystem library */
+extern void disk_timerproc();
 
 /*--------------------------------------------------------------------------*/
 /* Local Prototypes */
@@ -196,6 +204,29 @@ void gpio_setup(void)
 }
 
 /*--------------------------------------------------------------------------*/
+/** @brief Systick Setup
+
+Setup SysTick Timer for 1 millisecond interrupts, also enables Systick and
+Systick-Interrupt.
+*/
+
+void systickSetup(void)
+{
+/* Set clock source to be the CPU clock prescaled by 8.
+for STM32F103 this is 72MHz / 8 => 9,000,000 counts per second */
+    systick_set_clocksource(STK_CSR_CLKSOURCE_AHB_DIV8);
+
+/* 9000000/9000 = 1000 overflows per second - every 1ms one interrupt */
+/* SysTick interrupt every N clock pulses: set reload to N-1 */
+    systick_set_reload(8999);
+
+    systick_interrupt_enable();
+
+/* Start counting. */
+    systick_counter_enable();
+}
+
+/*--------------------------------------------------------------------------*/
 /** @brief ADC Setup.
 
 ADC1 is turned on and calibrated.
@@ -233,15 +264,16 @@ void adc_setup(uint32_t adc_inputs)
 /*--------------------------------------------------------------------------*/
 /** @brief DMA Setup
 
-Enable DMA 1 Channel 1 to take conversion data from ADC 1, and also ADC 2 when the
-ADC is used in dual mode. The ADC will dump a burst of data to memory each time, and we
-need to grab it before the next conversions start. This must be called after each transfer
-to reset the memory buffer to the beginning. */
+Enable DMA 1 Channel 1 to take conversion data from ADC 1, and also ADC 2 when
+the ADC is used in dual mode. The ADC will dump a burst of data to memory each
+time, and we need to grab it before the next conversions start. This must be
+called after each transfer to reset the memory buffer to the beginning.
+*/
 
-void dma_setup(void)
+void dma_adc_setup(void)
 {
 /* Enable DMA1 Clock */
-	rcc_peripheral_enable_clock(&RCC_AHBENR, RCC_AHBENR_DMA1EN);
+	rcc_periph_clock_enable(RCC_DMA1);
 	dma_channel_reset(DMA1,DMA_CHANNEL1);
 	dma_set_priority(DMA1,DMA_CHANNEL1,DMA_CCR_PL_LOW);
 /* We want all 32 bits from the ADC to include ADC2 data */
@@ -250,7 +282,7 @@ void dma_setup(void)
 	dma_enable_memory_increment_mode(DMA1,DMA_CHANNEL1);
 	dma_set_read_from_peripheral(DMA1,DMA_CHANNEL1);
 /* The register to target is the ADC1 regular data register */
-	dma_set_peripheral_address(DMA1,DMA_CHANNEL1,(uint32_t)&ADC1_DR);
+	dma_set_peripheral_address(DMA1,DMA_CHANNEL1,(uint32_t)&ADC_DR(ADC1));
 /* The array v[] receives the converted output */
 	dma_set_memory_address(DMA1,DMA_CHANNEL1,(uint32_t)v);
 	dma_set_number_of_data(DMA1,DMA_CHANNEL1,NUM_CHANNEL);
@@ -407,5 +439,47 @@ void rtc_alarm_isr(void)
 	exti_reset_request(EXTI17);
 }
 
+/*-----------------------------------------------------------*/
+/** @brief Systick Interrupt Handler
+
+This updates the status of any inserted SD card every 10 ms.
+
+Can be used to provide a RTC.
+*/
+void sys_tick_handler(void)
+{
+    millisecondsCount++;
+/* SD card status update. */
+    if ((millisecondsCount % (10)) == 0) disk_timerproc();
+
+/* updated every second if systick is used for the real-time clock. */
+    if ((millisecondsCount % 1000) == 0) secondsCount++;
+}
+
+/*--------------------------------------------------------------------------*/
+/* USART ISR
+
+Find out what interrupted and get or send data as appropriate.
+*/
+
+void usart1_isr(void)
+{
+	static uint16_t data;
+
+/* Check if we were called because of RXNE. */
+	if (usart_get_flag(USART1,USART_SR_RXNE))
+	{
+/* If buffer full we'll just drop it */
+		put_to_receive_buffer((uint8_t) usart_recv(USART1));
+	}
+/* Check if we were called because of TXE. */
+	if (usart_get_flag(USART1,USART_SR_TXE))
+	{
+/* If buffer empty, disable the tx interrupt */
+		data = get_from_send_buffer();
+		if ((data & 0xFF00) > 0) usart_disable_tx_interrupt(USART1);
+		else usart_send(USART1, (data & 0xFF));
+	}
+}
 /*--------------------------------------------------------------------------*/
 

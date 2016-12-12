@@ -37,8 +37,6 @@ static void commsPrintInt(int32_t value);
 static void commsPrintHex(uint32_t value);
 static void commsPrintString(char* ch);
 static void commsPrintChar(char* ch);
-int32_t asciiToInt(char* buffer);
-void intToAscii(int32_t value, char* buffer);
 
 /* Globals */
 uint8_t send_buffer[BUFFER_SIZE+3];
@@ -229,18 +227,13 @@ void commsPrintInt(int32_t value)
 
 void commsPrintHex(uint32_t value)
 {
-    uint8_t i;
+    uint8_t i=0;
     char buffer[25];
-
-/* Fill the buffer to get the order correct. */
-    for (i = 0; i < 4; i++)
+    hexToAscii(value, buffer);
+    while (buffer[i] > 0)
     {
-        buffer[i] = "0123456789ABCDEF"[value & 0xF];
-        value >>= 4;
-    }
-    for (i = 4; i > 0; i--)
-    {
-        commsPrintChar(&buffer[i-1]);
+        commsPrintChar(&buffer[i]);
+        i++;
     }
 }
 
@@ -298,8 +291,28 @@ int32_t asciiToInt(char* string)
     }
     return number;
 }
+
 /*--------------------------------------------------------------------------*/
-/** @brief Convert an Integer to ASCII decimal form
+/** @brief Convert a 16 bit Integer to ASCII hexadecimal string form
+
+@param[in] value: int16_t integer value to be converted to ASCII form.
+@param[in] buffer: char* externally defined buffer to hold the result.
+*/
+
+void hexToAscii(int16_t value, char* buffer)
+{
+    uint8_t i = 0;
+
+    for (i = 0; i < 4; i++)
+    {
+        buffer[i] = "0123456789ABCDEF"[(value >> 12) & 0xF];
+        value <<= 4;
+    }
+    buffer[4] = 0;
+}
+
+/*--------------------------------------------------------------------------*/
+/** @brief Convert a 32 bit Integer to ASCII decimal string form
 
 @param[in] value: int32_t integer value to be converted to ASCII form.
 @param[in] buffer: char* externally defined buffer to hold the result.
@@ -335,6 +348,7 @@ void intToAscii(int32_t value, char* buffer)
     }
     buffer[nr_digits] = 0;
 }
+
 /*--------------------------------------------------------------------------*/
 /** @brief Append a string to another
 
@@ -352,10 +366,11 @@ void stringAppend(char* string, char* appendage)
     }
     string[j] = 0;
 }
+
 /*--------------------------------------------------------------------------*/
 /** @brief String Copy
 
-@param[in] string: char* copied string, returned.
+@param[out] string: char* copied string, returned.
 @param[in] original: char* original string to be copied.
 */
 
@@ -369,6 +384,7 @@ void stringCopy(char* string, char* original)
     }
     string[i] = 0;
 }
+
 /*--------------------------------------------------------------------------*/
 /** @brief Compute string length
 
