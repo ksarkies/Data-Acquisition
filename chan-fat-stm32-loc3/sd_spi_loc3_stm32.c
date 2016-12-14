@@ -473,8 +473,6 @@ All peripherals are initialised and the power is turned on to the card.
 
 static void power_on (void)
 {
-	volatile BYTE dummyread;
-
 /* Enable GPIO clock for CS */
 	rcc_peripheral_enable_clock(&RCC_GPIO, RCC_GPIO_PORT_CS);
 /* Enable SPI clock, SPI1: APB2, SPI2: APB1 */

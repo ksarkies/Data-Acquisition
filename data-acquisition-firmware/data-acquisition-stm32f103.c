@@ -58,14 +58,12 @@ Initial 23 November 2016
 #include "data-acquisition-stm32f103.h"
 #include "data-acquisition-objdic.h"
 
-#include "ff.h"
+#include <stdbool.h>
 
 /* Local Prototypes */
 static void parseCommand(uint8_t* line);
 
 /* Globals */
-static char writeFileName[12];
-static char readFileName[12];
 static uint8_t writeFileHandle;
 static uint8_t readFileHandle;
 
@@ -89,7 +87,7 @@ int main(void)
 	dma_adc_setup();
 	usart1_setup();
     init_comms_buffers();
-    uint8_t status = init_file();
+    init_file();
     writeFileHandle = 0xFF;
     readFileHandle = 0xFF;
 
@@ -257,7 +255,7 @@ directory, then size and name are not sent back. The type character can be:
                 char type;
                 uint32_t size;
                 uint8_t fileStatus =
-                    read_directory_entry(line+2, &type, &size, fileName);
+                    read_directory_entry((char*)line+2, &type, &size, fileName);
                 char dirInfo[20];
                 dirInfo[0] = type;
                 dirInfo[1] = 0;
@@ -279,14 +277,50 @@ Parameter is a filename, 8 character plus dot plus 3 character extension.
 Returns a file handle. On error, file handle is 0xFF. */
             case 'W':
             {
-
                 if (stringLength((char*)line+2) < 12)
                 {
-                    uint8_t fileStatus = FR_INT_ERR;
-                    stringCopy(writeFileName,(char*)line+2);
+                    uint8_t fileStatus =
+                        open_write_file((char*)line+2, &writeFileHandle);
                     sendResponse("fW",writeFileHandle);
                     sendResponse("fE",(uint8_t)fileStatus);
                 }
+                break;
+            }
+/* Rf Open a file f=filename for reading less than 12 characters.
+Parameter is a filename, 8 character plus dot plus 3 character extension.
+Returns a file handle. On error, file handle is 0xFF. */
+            case 'R':
+            {
+                if (stringLength((char*)line+2) < 12)
+                {
+                    uint8_t fileStatus = 
+                        open_read_file((char*)line+2, &readFileHandle);
+                    sendResponse("fW",readFileHandle);
+                    sendResponse("fE",(uint8_t)fileStatus);
+                }
+                break;
+            }
+/* s Return the name and size of open files.
+Each open file is reported with a separate message. */
+            case 'S':
+            {
+                uint8_t fileHandle;
+                for (fileHandle=0; fileHandle<8; fileHandle++)
+                {
+                    if (valid_file_handle(fileHandle))
+                    {
+                        char fileName[20];
+                        get_file_name(fileHandle, fileName);
+                        sendString("fS",fileName);
+                    }
+                }
+                break;
+            }
+/* X Delete File. */
+            case 'X':
+            {
+                uint8_t fileStatus = delete_file((char*)line+2);
+                sendResponse("fE",(uint8_t)fileStatus);
                 break;
             }
 /* M Reinitialize the memory card. */

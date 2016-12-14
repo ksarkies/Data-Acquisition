@@ -23,6 +23,7 @@ K. Sarkies, 10 December 2016
  */
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "ff.h"
 #include "file.h"
@@ -39,8 +40,8 @@ K. Sarkies, 10 December 2016
 /* ChaN FAT */
 static FATFS Fatfs[_VOLUMES];
 static FATFS* fs;		            /* File system object for logical drive 0 */
-static FIL file[MAX_OPEN_FILES];    /* file descriptions, 2 files maximum. */
-static FILINFO fileInfo[MAX_OPEN_FILES];
+static FIL file[MAX_OPEN_FILES];    /* file descriptions. */
+static FILINFO fileInfo[MAX_OPEN_FILES];    /* file information (open files) */
 static bool fileUsable;
 static uint8_t filemap=0;           /* map of open file handles */
 static uint8_t writeFileHandle;
@@ -49,8 +50,8 @@ static uint8_t readFileHandle;
 /*--------------------------------------------------------------------------*/
 /* Local Prototypes */
 
-static uint8_t findFileHandle(void)
-static void deleteFileHandle(uint8_t fileHandle)
+static uint8_t find_file_handle(void);
+static void delete_file_handle(uint8_t fileHandle);
 /*--------------------------------------------------------------------------*/
 /* Helpers */
 /*--------------------------------------------------------------------------*/
@@ -103,9 +104,9 @@ uint8_t get_free_clusters(uint32_t* freeClusters, uint32_t* clusterSize)
 uint8_t read_directory_entry(char* directoryName, char* type, uint32_t* size,
                              char* fileName)
 {
+    FRESULT fileStatus = FR_OK;
     static DIR directory;
     FILINFO fileInfo;
-    FRESULT fileStatus = FR_OK;
     if (directoryName[0] != 0) fileStatus = f_opendir(&directory, directoryName);
     if (fileStatus == FR_OK)
         fileStatus = f_readdir(&directory, &fileInfo);
@@ -128,11 +129,69 @@ uint8_t read_directory_entry(char* directoryName, char* type, uint32_t* size,
 }
 
 /*--------------------------------------------------------------------------*/
+/** @brief Open a file for Read Only.
+
+A valid filename must be provided. The file is opened if it exists and a file
+handle is obtained and returned. The file handle is used to access file
+information for opened files. A value of 0xFF indicates that a file has not
+been opened. If the handle passed is already allocated, the function returns
+with an ACCESS DENIED error.
+
+Globals:
+file[] an array of opened file object structures defined by ChaN FAT FS.
+fileInfo[] an array of file information on open files.
+
+@param[in] char*: file name
+@param[out] uint8_t*: file handle.
+@returns uint8_t: status of operation.
+*/
+
+uint8_t open_read_file(char* fileName, uint8_t* readFileHandle)
+{
+    FRESULT fileStatus = FR_OK;
+    uint8_t fileHandle = 0xFF;
+/* Null file name */
+    if (fileName[0] == 0)
+        fileStatus = FR_INVALID_OBJECT;
+/* A file is already open */
+    else if (*readFileHandle < 0xFF)
+        fileStatus = FR_DENIED;
+    else
+    {
+        fileHandle = find_file_handle();
+/* Unable to be allocated */
+        if (fileHandle >= MAX_OPEN_FILES)
+            fileStatus = FR_TOO_MANY_OPEN_FILES;
+        else
+        {
+/* Try to open a file read only */
+            fileStatus = f_open(&file[fileHandle], fileName, \
+                                FA_OPEN_EXISTING | FA_READ);
+            if (fileStatus == FR_OK)
+                fileStatus = f_stat(fileName, fileInfo+fileHandle);
+            if (fileStatus != FR_OK)
+            {
+                delete_file_handle(fileHandle);
+                fileHandle = 0xFF;
+            }
+            *readFileHandle = fileHandle;
+        }
+    }
+    return fileStatus;
+}
+
+/*--------------------------------------------------------------------------*/
 /** @brief Open a file for Writing.
 
-If the file doesn't exist a valid filename must be provided. The file is
-created and a file handle is obtained and returned. If the file name is a null
-string then a valid file handler must be provided and the file is opened.
+A valid filename must be provided. The file is opened or created and a file
+handle is obtained and returned. The file handle is used to access file
+information for opened files. A value of 0xFF indicates that a file has not
+been opened. If the handle passed is already allocated, the function returns
+with an ACCESS DENIED error.
+
+Globals:
+file[] an array of opened file object structures defined by ChaN FAT FS.
+fileInfo[] an array of file information on open files.
 
 @param[in] char*: file name
 @param[out] uint8_t*: file handle.
@@ -141,35 +200,192 @@ string then a valid file handler must be provided and the file is opened.
 
 uint8_t open_write_file(char* fileName, uint8_t* writeFileHandle)
 {
+    FRESULT fileStatus = FR_OK;
     uint8_t fileHandle = 0xFF;
-/* Already open */
-    if (writeFileHandle < 0xFF)
+/* Null file name */
+    if (fileName[0] == 0)
+        fileStatus = FR_INVALID_OBJECT;
+/* A file is already open */
+    else if (*writeFileHandle < 0xFF)
         fileStatus = FR_DENIED;
     else
     {
-        fileHandle = findFileHandle();
+        fileHandle = find_file_handle();
 /* Unable to be allocated */
         if (fileHandle >= MAX_OPEN_FILES)
             fileStatus = FR_TOO_MANY_OPEN_FILES;
         else
         {
-/* Try to open a file write/read, creating it if necessary */
+/* Try to open a file write/read, creating it if necessary.
+Skip to the end of the file to append. */
             fileStatus = f_open(&file[fileHandle], fileName, \
-                                FA_OPEN_ALWAYS | FA_READ | FA_WRITE);
-/* Skip to the end of the file to append. */
+                                FA_OPEN_APPEND | FA_READ | FA_WRITE);
+/* Check existence of file and get information array entry. */
             if (fileStatus == FR_OK)
-                fileStatus = f_lseek(&file[fileHandle], f_size(file));
-            else
+                fileStatus = f_stat(fileName, fileInfo+fileHandle);
+            if (fileStatus != FR_OK)
             {
-                deleteFileHandle(fileHandle);
+                delete_file_handle(fileHandle);
                 fileHandle = 0xFF;
             }
-            writeFileHandle = fileHandle;
-            if (fileStatus == FR_OK)
-                fileStatus = f_stat(fileName, fileInfo+writeFileHandle);
+            *writeFileHandle = fileHandle;
         }
     }
     return fileStatus;
+}
+
+/*--------------------------------------------------------------------------*/
+/** @brief Delete a file.
+
+A valid filename must be provided. Checks the filename against all open
+file names. If a match is found then the file is not deleted.
+
+Globals:
+file[] an array of opened file object structures defined by ChaN FAT FS.
+fileInfo[] an array of file information on open files.
+
+@param[in] char*: file name
+@returns uint8_t: status of operation.
+*/
+
+uint8_t delete_file(char* fileName)
+{
+    FRESULT fileStatus = FR_OK; 
+    uint8_t fileHandle;
+    bool ok = true;
+    for (fileHandle = 0; fileHandle < 8; fileHandle++)
+        if (valid_file_handle(fileHandle) &&
+            (stringEqual(fileName, fileInfo[fileHandle].fname))) ok = false;
+    if (ok)
+    {
+        fileStatus = f_unlink(fileName);
+    }
+    else
+        fileStatus = FR_DENIED;
+    return fileStatus;
+}
+
+/*--------------------------------------------------------------------------*/
+/** @brief Read from an Open file.
+
+Get data from a file from the last position that data was read after opening.
+The read/write pointer in the file object is advanced as data is read.
+Returns the number read and binary byte-wise data. The number read will
+differ from the number requested if EOF is reached.
+
+Globals:
+file[] an array of opened file object structures defined by ChaN FAT FS.
+fileInfo[] an array of file information on open files.
+
+@param[in] uint8_t: file handle.
+@param[in] uint8_t*: length of the data block to be read.
+@param[in] uint8_t*: data block of maximum length 80 bytes
+@returns uint8_t: status of operation.
+*/
+
+uint8_t read_from_file(uint8_t fileHandle, uint8_t* blockLength, uint8_t* data)
+{
+    FRESULT fileStatus = FR_OK;
+    UINT numRead = 0;
+    if (*blockLength < 82)
+        fileStatus = f_read(&file[fileHandle],data,*blockLength,&numRead);
+    else fileStatus = FR_INVALID_PARAMETER;
+    *blockLength = numRead;
+    return fileStatus;
+}
+
+/*--------------------------------------------------------------------------*/
+/** @brief Write to an Open Write file.
+
+Store data to the file starting at the end of the file.
+
+Nothing is written if the data block is longer than 80 bytes. The number of
+bytes to write is given by the length less 4. The block length parameter returns
+the actual number written. The number written will be less than from the number
+requested if the disk is full. 
+
+Globals:
+file[] an array of opened file object structures defined by ChaN FAT FS.
+fileInfo[] an array of file information on open files.
+
+@param[in] uint8_t: file handle.
+@param[in] uint8_t*: length of the data block to be written.
+@param[in] uint8_t*: data block of maximum length 80 bytes
+@returns uint8_t: status of operation.
+*/
+
+uint8_t write_to_file(uint8_t fileHandle, uint8_t* blockLength, uint8_t* data)
+{
+    FRESULT fileStatus = FR_OK;
+    UINT numWritten = 0;
+    if (*blockLength < 82)
+    {
+        fileStatus = f_write(&file[fileHandle],data,*blockLength,&numWritten);
+        if (numWritten != *blockLength)
+        {
+            fileStatus = FR_DENIED;
+        }
+/* Flush the cached data to the storage medium */
+        if (fileStatus == FR_OK) f_sync(&file[fileHandle]);
+    }
+    else fileStatus = FR_INVALID_PARAMETER;
+    return fileStatus;
+}
+
+/*--------------------------------------------------------------------------*/
+/** @brief Close a file.
+
+A valid file handle must be provided.
+
+Globals:
+file[] an array of opened file object structures defined by ChaN FAT FS.
+fileInfo[] an array of file information on open files.
+
+@param[in] uint8_t: file handle.
+@returns uint8_t: status of operation.
+*/
+
+uint8_t close_file(uint8_t fileHandle)
+{
+    FRESULT fileStatus = FR_OK;
+    if (fileHandle >= MAX_OPEN_FILES)
+    {
+        fileStatus = FR_INVALID_OBJECT;
+    }
+    else if (! valid_file_handle(fileHandle))
+    {
+        fileStatus = FR_INVALID_OBJECT;
+    }
+    else
+    {
+/* Check if it is one of the currently opened files. */
+        if (writeFileHandle == fileHandle) writeFileHandle = 0xFF;
+        else if (readFileHandle == fileHandle) readFileHandle = 0xFF;
+/* Close the file and delete the handle. */
+        fileInfo[fileHandle].fname[0] = 0;
+        delete_file_handle(fileHandle);
+        fileStatus = f_close(&file[fileHandle]);
+        fileHandle = 0xFF;
+    }
+    return fileStatus;
+}
+
+/*--------------------------------------------------------------------------*/
+/** @brief Get filename for a file handle
+
+A file handle is valid for open files. Returns the file name or a null string
+if the file handle is not valid.
+
+@param[in] uint8_t: file handle.
+@param[out] char* file name string.
+*/
+
+void get_file_name(uint8_t fileHandle, char* fileName)
+{
+    if (valid_file_handle(fileHandle))
+        fileName = fileInfo[fileHandle].fname;
+    else
+        fileName[0] = 0;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -178,11 +394,11 @@ uint8_t open_write_file(char* fileName, uint8_t* writeFileHandle)
 The file handle map consists of bits set when a handle has been allocated.
 This function searches for a free handle.
 
-@returns uint8_t 0..MAX_OPEN_FILES-1 or 255 if no handle was allocated (too many
-open files).
+@returns uint8_t 0..MAX_OPEN_FILES-1 or 0xFF if no handle was allocated (too
+many open files).
 */
 
-static uint8_t findFileHandle(void)
+static uint8_t find_file_handle(void)
 {
     uint8_t i=0;
     uint8_t fileHandle=0xFF;
@@ -198,6 +414,20 @@ static uint8_t findFileHandle(void)
 }
 
 /*--------------------------------------------------------------------------*/
+/** @brief Validate a file handle
+
+The file handle map consists of bits set when a handle has been allocated.
+This function checks if the file handle refers to an open file.
+
+@param fileHandle: uint8_t the handle for the file to be deleted.
+*/
+
+bool valid_file_handle(uint8_t fileHandle)
+{
+    return (filemap & (1 << fileHandle));
+}
+
+/*--------------------------------------------------------------------------*/
 /** @brief Delete a file handle
 
 The file handle map consists of bits set when a handle has been allocated.
@@ -206,7 +436,7 @@ This function deletes a handle. Does nothing if file handle is not valid.
 @param fileHandle: uint8_t the handle for the file to be deleted.
 */
 
-static void deleteFileHandle(uint8_t fileHandle)
+static void delete_file_handle(uint8_t fileHandle)
 {
     if (fileHandle < MAX_OPEN_FILES)
         filemap &= ~(1 << fileHandle);
