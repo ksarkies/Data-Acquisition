@@ -87,9 +87,9 @@ uint8_t get_from_receive_buffer(void)
 @param[in] uint8_t: character to put to the send buffer
 */
 
-void put_to_receive_buffer(uint8_t character)
+uint16_t put_to_receive_buffer(uint8_t character)
 {
-    buffer_put(receive_buffer, character);
+    return buffer_put(receive_buffer, character);
 }
 
 /*--------------------------------------------------------------------------*/
@@ -98,7 +98,7 @@ void put_to_receive_buffer(uint8_t character)
 @returns uint8_t: next character from the send buffer
 */
 
-uint8_t get_from_send_buffer(void)
+uint16_t get_from_send_buffer(void)
 {
     return buffer_get(send_buffer);
 }

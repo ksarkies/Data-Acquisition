@@ -233,7 +233,14 @@ Data is not written to the file externally. */
     {
         switch (line[1])
         {
-/* F Return number of free clusters followed by the cluster size in bytes. */
+/* Z Create a standard file system on the memory volume */
+            case 'Z':
+            {
+                uint8_t fileStatus = make_filesystem();
+                sendResponse("fE",(uint8_t)fileStatus);
+                break;
+            }
+/* F Return number of free clusters followed by the cluster size in sectors. */
             case 'F':
             {
                 uint32_t freeClusters = 0;
@@ -295,7 +302,22 @@ Returns a file handle. On error, file handle is 0xFF. */
                 {
                     uint8_t fileStatus = 
                         open_read_file((char*)line+2, &readFileHandle);
-                    sendResponse("fW",readFileHandle);
+                    sendResponse("fR",readFileHandle);
+                    sendResponse("fE",(uint8_t)fileStatus);
+                }
+                break;
+            }
+/* Gf Read a record from the file specified by f=file handle. Return as a comma
+separated list. */
+            case 'G':
+            {
+                uint8_t fileHandle = asciiToInt((char*)line+2);
+                if (valid_file_handle(fileHandle))
+                {
+                    char string[80];
+                    uint8_t fileStatus = 
+                        read_line_from_file(fileHandle,string);
+                    sendString("fG",string);
                     sendResponse("fE",(uint8_t)fileStatus);
                 }
                 break;

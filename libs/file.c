@@ -43,7 +43,7 @@ static FATFS* fs;		            /* File system object for logical drive 0 */
 static FIL file[MAX_OPEN_FILES];    /* file descriptions. */
 static FILINFO fileInfo[MAX_OPEN_FILES];    /* file information (open files) */
 static bool fileUsable;
-static uint8_t filemap=0;           /* map of open file handles */
+static uint8_t filemap;             /* map of open file handles */
 static uint8_t writeFileHandle;
 static uint8_t readFileHandle;
 
@@ -77,10 +77,40 @@ uint8_t init_file(void)
 }
 
 /*--------------------------------------------------------------------------*/
-/** @brief Read the free space on the drive.
+/** @brief Create a filesystem on the drive.
+
+A FAT32 file system with sector size 512 bytes and cluster size 8 in common
+with most SD memory cards.
+
+NOTE: _USE_MKFS must be set to 1 in ffconf.h
 
 @param[out] uint32_t: number of free clusters.
-@param[out] uint32_t: cluster size.
+@param[out] uint32_t: cluster size in sectors.
+@returns uint8_t: status of operation.
+*/
+
+#define SECTOR_SIZE _MIN_SS
+#define CLUSTER_SIZE 8
+#define WORKSPACE_SIZE SECTOR_SIZE*CLUSTER_SIZE
+
+uint8_t make_filesystem(void)
+{
+    uint8_t workspace[WORKSPACE_SIZE];
+    FRESULT fileStatus = FR_DENIED;
+#if _USE_MKFS
+    fileStatus = f_mkfs("", FM_FAT32, SECTOR_SIZE*CLUSTER_SIZE,
+                            workspace, WORKSPACE_SIZE);
+#endif
+    return fileStatus;
+}
+
+/*--------------------------------------------------------------------------*/
+/** @brief Read the free space on the drive.
+
+Sector size is nearly always 512 bytes and is limited in ffconf.h to that value.
+
+@param[out] uint32_t: number of free clusters.
+@param[out] uint32_t: cluster size in sectors.
 @returns uint8_t: status of operation.
 */
 
@@ -200,6 +230,7 @@ fileInfo[] an array of file information on open files.
 
 uint8_t open_write_file(char* fileName, uint8_t* writeFileHandle)
 {
+sendString("fT",fileName);
     FRESULT fileStatus = FR_OK;
     uint8_t fileHandle = 0xFF;
 /* Null file name */
@@ -212,20 +243,25 @@ uint8_t open_write_file(char* fileName, uint8_t* writeFileHandle)
     {
         fileHandle = find_file_handle();
 /* Unable to be allocated */
+sendResponse("ft",fileHandle);
         if (fileHandle >= MAX_OPEN_FILES)
             fileStatus = FR_TOO_MANY_OPEN_FILES;
         else
         {
 /* Try to open a file write/read, creating it if necessary.
 Skip to the end of the file to append. */
+sendString("fT","Opening");
             fileStatus = f_open(&file[fileHandle], fileName, \
                                 FA_OPEN_APPEND | FA_READ | FA_WRITE);
+sendString("fT","Opened");
 /* Check existence of file and get information array entry. */
             if (fileStatus == FR_OK)
                 fileStatus = f_stat(fileName, fileInfo+fileHandle);
+sendString("fT","Statted");
             if (fileStatus != FR_OK)
             {
                 delete_file_handle(fileHandle);
+sendString("fT","Handle Deleted");
                 fileHandle = 0xFF;
             }
             *writeFileHandle = fileHandle;
@@ -266,7 +302,7 @@ uint8_t delete_file(char* fileName)
 }
 
 /*--------------------------------------------------------------------------*/
-/** @brief Read from an Open file.
+/** @brief Read Block from an Open file.
 
 Get data from a file from the last position that data was read after opening.
 The read/write pointer in the file object is advanced as data is read.
@@ -283,7 +319,7 @@ fileInfo[] an array of file information on open files.
 @returns uint8_t: status of operation.
 */
 
-uint8_t read_from_file(uint8_t fileHandle, uint8_t* blockLength, uint8_t* data)
+uint8_t read_block_from_file(uint8_t fileHandle, uint8_t* blockLength, uint8_t* data)
 {
     FRESULT fileStatus = FR_OK;
     UINT numRead = 0;
@@ -291,6 +327,47 @@ uint8_t read_from_file(uint8_t fileHandle, uint8_t* blockLength, uint8_t* data)
         fileStatus = f_read(&file[fileHandle],data,*blockLength,&numRead);
     else fileStatus = FR_INVALID_PARAMETER;
     *blockLength = numRead;
+    return fileStatus;
+}
+
+/*--------------------------------------------------------------------------*/
+/** @brief Read Line from an Open file.
+
+Get data from a file from the last position that data was read after opening.
+The read/write pointer in the file object is advanced as data is read. Data is
+read into a string until a carriage return is encountered. Line feeds are
+stripped out.
+
+NOTE: set _USE_STRFUNC = 1 or 2 in ffconf.h
+
+Globals:
+file[] an array of opened file object structures defined by ChaN FAT FS.
+fileInfo[] an array of file information on open files.
+
+@param[in] uint8_t: file handle.
+@param[in] char*: string of maximum length 80 bytes
+@returns uint8_t: status of operation.
+*/
+
+uint8_t read_line_from_file(uint8_t fileHandle, char* string)
+{
+    FRESULT fileStatus = FR_OK;
+    char ch[2];                         /* Buffer for character */
+    if (valid_file_handle(fileHandle))
+    {
+        UINT numRead = 0;
+        uint8_t i = 0;
+        do
+        {
+            fileStatus = f_read(&file[fileHandle],ch,1,&numRead);
+            if (ch[0] != '\a')          /* Strip line feeds */
+                string[i++] = ch[0];
+        }
+        while ((fileStatus == FR_OK) && (ch[0] != '\n'));
+        if (fileStatus == FR_OK) string[i] = 0;
+        else  string[0] = 0;
+    }
+    else fileStatus = FR_INVALID_PARAMETER;
     return fileStatus;
 }
 

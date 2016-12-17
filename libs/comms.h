@@ -32,8 +32,8 @@ Copyright (C) K. Sarkies <ksarkies@internode.on.net>
 void init_comms_buffers(void);
 bool receive_data_available(void);
 uint8_t get_from_receive_buffer(void);
-void put_to_receive_buffer(uint8_t character);
-uint8_t get_from_send_buffer(void);
+uint16_t put_to_receive_buffer(uint8_t character);
+uint16_t get_from_send_buffer(void);
 void dataMessageSend(char* ident, int32_t parm1, int32_t parm2);
 void sendResponse(char* ident, int32_t parameter);
 void sendDebugResponse(char* ident, int32_t parameter);
