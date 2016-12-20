@@ -28,6 +28,8 @@ K. Sarkies, 24 November 2016
 #define HIGH        1
 #define LOW         0
 
+#define RTC_SOURCE RTC
+
 /* Size of communications receive and transmit buffers. */
 #define BUFFER_SIZE 128
 
@@ -50,6 +52,9 @@ void sei(void);
 void commsEnableTxInterrupt(uint8_t enable);
 void flashReadData(uint32_t *flashBlock, uint8_t *dataBlock, uint16_t size);
 uint32_t flashWriteData(uint32_t *flashBlock, uint8_t *dataBlock, uint16_t size);
+uint32_t getMilliSecondsCount();
+uint32_t getSecondsCount();
+void setSecondsCount(uint32_t time);
 void clock_setup(void);
 void gpio_setup(void);
 void systickSetup(void);

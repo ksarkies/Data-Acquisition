@@ -9,6 +9,13 @@ OBJDUMP		    = $(PREFIX)-objdump
 GDB			    = $(PREFIX)-gdb
 NM 			    = $(PREFIX)-nm
 
+MCU             = cortex-m3
+PROC            = STM32F1
+CHIP            = STM32F10x_128k_20k
+BOARD           = ET_STM32F103
+F_XTAL          = 8000000
+SYSCLOCK_CL     = SYSCLK_FREQ_72MHz=72000000
+
 LIBRARY_DIR     = /home/ksarkies/Development-Software/arm-library
 DRIVERS_DIR	    = $(LIBRARY_DIR)/libopencm3-examples/libopencm3
 DRIVERS_SRC     = $(DRIVERS_DIR)/lib/stm32/f1
@@ -20,8 +27,15 @@ VPATH           += $(FATFSDIR)  $(LIBS_DIR)
 
 INCLUDES	    = $(patsubst %,-I%,$(DRIVERS_INC) $(FATFSDIR) $(LIBS_DIR))
 
-CFLAGS		    += -Os -g -Wall -Wextra -I. $(INCLUDES) -fno-common \
-			       -mcpu=cortex-m3 -mthumb -msoft-float -MD -DSTM32F1
+CDEFS           += -DHSE_VALUE=$(F_XTAL)UL
+CDEFS           += -D$(SYSCLOCK_CL)
+CDEFS           += -DUSE_$(BOARD)
+
+CFLAGS	        += -Os -g -Wall -Wextra -Wno-unused-variable -I. $(INCLUDES) \
+                    -fno-common -mthumb -MD
+CFLAGS	        += -DGCC_ARMCM3 -ffunction-sections -fdata-sections
+CFLAGS	        += -mcpu=$(MCU) -D$(PROC) -msoft-float
+CFLAGS	        += $(CDEFS)
 
 LDSCRIPT        = stm32-h103RBT6.ld
 
@@ -32,7 +46,7 @@ LDFLAGS		    += -I . -Wl,--start-group -lc -lgcc -lnosys -Wl,--end-group \
 
 # The libopencm3 library is assumed to exist in libopencm3/lib, otherwise add files here
 CFILES		    = $(PROJECT)-stm32f103.c $(PROJECT)-objdic.c
-CFILES          += buffer.c hardware.c comms.c file.c
+CFILES          += buffer.c hardware.c comms.c file.c timelib.c
 CFILES          += ff.c fattime.c sd_spi_loc3_stm32.c
 
 OBJS		    = $(CFILES:.c=.o)

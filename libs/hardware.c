@@ -45,6 +45,7 @@ K. Sarkies, 10 December 2016
 #include "buffer.h"
 #include "hardware.h"
 #include "comms.h"
+#include "board-defs.h"
 
 #define  _BV(bit) (1 << (bit))
 
@@ -176,6 +177,47 @@ uint32_t flashWriteData(uint32_t *flashBlock, uint8_t *dataBlock, uint16_t size)
 }
 
 /*--------------------------------------------------------------------------*/
+/** @brief Read the Elapsed Time in Milliseconds
+
+@returns uint32_t Milliseconds counter value.
+*/
+
+uint32_t getMilliSecondsCount()
+{
+    return millisecondsCount;
+}
+
+/*--------------------------------------------------------------------------*/
+/** @brief Read the Time
+
+@returns uint32_t seconds counter value.
+*/
+
+uint32_t getSecondsCount()
+{
+#if (RTC_SOURCE == RTC)
+    return rtc_get_counter_val();
+#else
+    return secondsCount;
+#endif
+}
+
+/*--------------------------------------------------------------------------*/
+/** @brief Set the Time
+
+@param[in] time: uint32_t seconds counter value to set.
+*/
+
+void setSecondsCount(uint32_t time)
+{
+#if (RTC_SOURCE == RTC)
+    rtc_set_counter_val(time);
+#else
+    secondsCount = time;
+#endif
+}
+
+/*--------------------------------------------------------------------------*/
 /** @brief Clock Enable
 
 The processor system clock is established. */
@@ -189,8 +231,8 @@ void clock_setup(void)
 /** @brief GPIO Setup.
 
 This sets the clocks for the GPIO and AFIO ports. Any digital outputs and
-inputs are also set here.
-
+inputs are also set here using definitions for the ports in the board-defs.h
+header.
 */
 
 void gpio_setup(void)
@@ -200,6 +242,57 @@ void gpio_setup(void)
     rcc_periph_clock_enable(RCC_GPIOB);
     rcc_periph_clock_enable(RCC_GPIOC);
     rcc_periph_clock_enable(RCC_AFIO);
+#ifndef USE_SWD
+/* Disable SWD and JTAG to allow full use of the ports PA13, PA14, PA15 */
+    gpio_primary_remap(AFIO_MAPR_SWJ_CFG_JTAG_OFF_SW_OFF,0);
+#endif
+
+/* PA inputs analogue for currents, voltages and ambient temperature */
+#ifdef PA_ANALOGUE_INPUTS
+    gpio_set_mode(GPIOA, GPIO_MODE_INPUT, GPIO_CNF_INPUT_ANALOG,
+                PA_ANALOGUE_INPUTS);
+#endif
+/* PC inputs analogue for currents, voltages and ambient temperature */
+#ifdef PC_ANALOGUE_INPUTS
+    gpio_set_mode(GPIOC, GPIO_MODE_INPUT, GPIO_CNF_INPUT_ANALOG,
+                PC_ANALOGUE_INPUTS);
+#endif
+/* PA outputs digital */
+#ifdef PA_DIGITAL_OUTPUTS
+    gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_PUSHPULL,
+                PA_DIGITAL_OUTPUTS);
+    gpio_clear(GPIOA, PA_DIGITAL_OUTPUTS);
+#endif
+/* PB outputs digital */
+#ifdef PB_DIGITAL_OUTPUTS
+    gpio_set_mode(GPIOB, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_PUSHPULL,
+                PB_DIGITAL_OUTPUTS);
+    gpio_clear(GPIOB, PB_DIGITAL_OUTPUTS);
+#endif
+/* PC outputs digital */
+#ifdef PC_DIGITAL_OUTPUTS
+    gpio_set_mode(GPIOC, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_PUSHPULL,
+                PC_DIGITAL_OUTPUTS);
+    gpio_clear(GPIOC, PC_DIGITAL_OUTPUTS);
+#endif
+/* PA inputs digital. Set pull up/down configuration to pull up. */
+#ifdef PA_DIGITAL_INPUTS
+    gpio_set_mode(GPIOA, GPIO_MODE_INPUT, GPIO_CNF_INPUT_PULL_UPDOWN,
+                PA_DIGITAL_INPUTS);
+    gpio_set(GPIOA,PA_DIGITAL_INPUTS);
+#endif
+/* PB inputs digital. Set pull up/down configuration to pull up. */
+#ifdef PB_DIGITAL_INPUTS
+    gpio_set_mode(GPIOB, GPIO_MODE_INPUT, GPIO_CNF_INPUT_PULL_UPDOWN,
+                PB_DIGITAL_INPUTS);
+    gpio_set(GPIOB,PB_DIGITAL_INPUTS);
+#endif
+/* PC inputs digital. Set pull up/down configuration to pull up. */
+#ifdef PC_DIGITAL_INPUTS
+    gpio_set_mode(GPIOC, GPIO_MODE_INPUT, GPIO_CNF_INPUT_PULL_UPDOWN,
+                PC_DIGITAL_INPUTS);
+    gpio_set(GPIOC,PC_DIGITAL_INPUTS);
+#endif
 }
 
 /*--------------------------------------------------------------------------*/
@@ -333,6 +426,8 @@ void exti_setup(uint32_t exti_enables, uint32_t port)
 
 The RTC is woken up, cleared, set to use the external low frequency LSE clock
 (which must be provided on the board used) and set to prescale at 1Hz out.
+Thus the counter will contain elapsed time in seconds.
+
 The LSE clock appears to be already running.
 */
 
