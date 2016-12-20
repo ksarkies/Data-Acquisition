@@ -236,6 +236,7 @@ Data is not written to the file externally. */
 /* Z Create a standard file system on the memory volume */
             case 'Z':
             {
+                sendString("D","Creating Filesystem");
                 uint8_t fileStatus = make_filesystem();
                 sendResponse("fE",(uint8_t)fileStatus);
                 break;
@@ -335,6 +336,23 @@ Each open file is reported with a separate message. */
                         get_file_name(fileHandle, fileName);
                         sendString("fS",fileName);
                     }
+                }
+                break;
+            }
+/* Cf Close File specified by f=file handle. */
+            case 'C':
+            {
+                uint8_t fileHandle = asciiToInt((char*)line+2);
+                if (valid_file_handle(fileHandle))
+                {
+                    uint8_t fileStatus = close_file(fileHandle);
+/* Check if it is one of the currently opened files and disable it. */
+                    if (fileStatus == 0)
+                    {
+                        if (writeFileHandle == fileHandle) writeFileHandle = 0xFF;
+                        else if (readFileHandle == fileHandle) readFileHandle = 0xFF;
+                    }
+                    sendResponse("fE",(uint8_t)fileStatus);
                 }
                 break;
             }
