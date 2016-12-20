@@ -49,6 +49,7 @@ typedef bool BOOL;
 #include "ffconf.h"
 #include "diskio.h"
 #include "board.h"
+#include "comms.h"
 
 /* We can use DMA to free the processor a bit */
 #define STM32_SD_USE_DMA
@@ -105,22 +106,20 @@ typedef bool BOOL;
 static const DWORD socket_state_mask_cp = (1 << 0);
 static const DWORD socket_state_mask_wp = (1 << 1);
 
-static volatile
-DSTATUS Stat = STA_NOINIT;	/* Disk status */
+static volatile DSTATUS diskStatus = STA_NOINIT;	/* Disk status */
 
-/* These are updated in the Systick ISR and are read only */
-static volatile
-DWORD Timer1;	        /* 100Hz decrement timers */
+/* These are updated in the Systick ISR (see callback disk_timerproc())  */
+static volatile DWORD Timer1;               /* 100Hz decrement timers */
 
-static
-BYTE CardType;			/* Card type flags */
+static BYTE CardType;			            /* Card type flags */
 
 /*---------------------------------------------------------------------------*/
 /** @brief Check for timeout
 
-Read the ticking clock given by Timer1 and account for word rollover.
+Read the ticking clock given by Timer1, accounting for word rollover, and
+comparing with the given time to see if it has gone past.
 
-@param[in] DWORD timer: Original Time
+@param[in] DWORD timer: Original Time for comparison.
 @param[in] DWORD delay: Delay desired.
 
 Globals Timer1: DWORD incremented in the systick ISR by 10ms.
@@ -200,7 +199,7 @@ static DWORD socket_is_write_protected(void)
 
 static inline DWORD socket_is_write_protected(void)
 {
-	return 0; /* fake not protected */
+	return 0;   /* fake not protected */
 }
 
 #endif /* SOCKET_WP_CONNECTED */
@@ -247,7 +246,7 @@ static inline DWORD socket_is_empty(void)
 
 static inline DWORD socket_is_empty(void)
 {
-	return 0; /* fake inserted */
+	return 0;   /* fake inserted */
 }
 
 #endif /* SOCKET_CP_CONNECTED */
@@ -350,22 +349,21 @@ static BYTE rcvr_spi(void)
 A card that is ready will return 0xFF in response to the same value sent to it,
 that is, it is no longer sending any data. Keep trying for 50 timer ticks.
 
-@returns BYTE value of a status result. 0xFF means success, otherwise timeout.
+@returns bool value of a status result: TRUE = success, otherwise timeout.
 */
 
-static BYTE wait_ready(void)
+static bool wait_ready(void)
 {
-    BYTE response;
+    bool ready;
 
     DWORD timer = Timer1;           /* Wait for ready timeout of 500ms */
     rcvr_spi();                     /* Initial transmission */
     do
     {
-        response = rcvr_spi();      /* Get back the response */
+        ready = (rcvr_spi() == 0xFF);      /* Get back the response */
     }
-    while ((response != 0xFF) && !timeout(timer,50));
-
-    return response;
+    while (!ready && !timeout(timer,50));
+    return ready;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -471,7 +469,7 @@ static void stm32_dma_transfer(BOOL receive, const BYTE *buff, UINT btr)
 All peripherals are initialised and the power is turned on to the card.
 */
 
-static void power_on (void)
+static void power_on(void)
 {
 /* Enable GPIO clock for CS */
 	rcc_peripheral_enable_clock(&RCC_GPIO, RCC_GPIO_PORT_CS);
@@ -540,12 +538,12 @@ peripheral will not send any data out.
 
 All peripherals are disabled and the power is turned off to the card.
 
-Globals Stat: DSTATUS disk status.
+Globals diskStatus: DSTATUS disk status.
 */
 
-static void power_off (void)
+static void power_off(void)
 {
-	if (!(Stat & STA_NOINIT)) {
+	if (!(diskStatus & STA_NOINIT)) {
 		SELECT();
 		wait_ready();
 		release_spi();
@@ -560,7 +558,7 @@ static void power_off (void)
 
 	card_power(0);
 
-	Stat |= STA_NOINIT;		/* Set STA_NOINIT */
+	diskStatus |= STA_NOINIT;		/* Set STA_NOINIT */
 }
 
 /*---------------------------------------------------------------------------*/
@@ -574,7 +572,7 @@ This is in response to a previously sent read command.
 @returns BOOL valid token received.
 */
 
-static BOOL rcvr_datablock (BYTE *buff,UINT numBytes)
+static BOOL rcvr_datablock(BYTE *buff,UINT numBytes)
 {
 	BYTE token;
 
@@ -617,17 +615,14 @@ Only compiled if the filesystem is writeable.
 */
 
 #if _FS_READONLY == 0
-static BOOL xmit_datablock (const BYTE *buff,BYTE token)
+static BOOL xmit_datablock(const BYTE *buff,BYTE token)
 {
 	BYTE response;
 #ifndef STM32_SD_USE_DMA
 	BYTE wc;
 #endif
 
-	if (wait_ready() != 0xFF)
-    {
-        return FALSE;
-    }
+    if (!wait_ready()) return FALSE;
 
 	xmit_spi(token);					/* transmit data token */
 	if (token != 0xFD)
@@ -666,7 +661,7 @@ static BOOL xmit_datablock (const BYTE *buff,BYTE token)
 @returns BYTE response
 */
 
-static BYTE send_cmd (BYTE cmd,DWORD arg)
+static BYTE send_cmd(BYTE cmd,DWORD arg)
 {
 	BYTE n, response;
 
@@ -681,10 +676,7 @@ static BYTE send_cmd (BYTE cmd,DWORD arg)
 /* Select the card and wait for ready */
     DESELECT();
     SELECT();
-    if (wait_ready() != 0xFF)
-    {
-        return 0xFF;
-    }
+    if (!wait_ready()) return 0xFF;
 
 /* Send command packet */
     xmit_spi(cmd);                      /* Start + Command index */
@@ -724,25 +716,25 @@ Power on the drive and send some commands to find steady state and determine
 the type of card (SDSC or MMC). If not successful, power off and return a
 STA_NOINIT status.
 
-@param[in] drv: BYTE Physical drive number (only 0 allowed)
-@returns DSTATUS drive initialized/read only status. Global variable.
+@param[in] drv: BYTE Physical drive number (only 0 allowed here)
+@returns DSTATUS drive initialized/present/read only status.
 
 Globals Timer1: DWORD incremented in the systick ISR by (configurable) 1ms.
-        Stat: DSTATUS disk status.
+        diskStatus: DSTATUS disk status. Bit 0=STA_NOINIT, 1=STA_NODISK, 2=STA_PROTECT
 */
 
 DSTATUS disk_initialize(BYTE drv)
 {
 	BYTE n, cmd, ty, ocr[4];
 
-	if (drv) return STA_NOINIT;			/* Supports only single drive */
-	if (Stat & STA_NODISK) return Stat;	/* No card in the socket */
+	if (drv > 0) return STA_NOINIT;			    /* Supports only single drive */
+	if (diskStatus & STA_NODISK) return diskStatus;	/* No card in the socket */
 
 /* Force socket power on and initialize interface */
 	power_on();
 
 	interface_speed(INTERFACE_SLOW);
-	for (n = 10; n; n--) rcvr_spi();	/* 80 dummy clocks */
+	for (n = 10; n; n--) rcvr_spi();	        /* 80 dummy clocks */
 
 	ty = 0;
 /* Enter Idle state */
@@ -783,23 +775,24 @@ DSTATUS disk_initialize(BYTE drv)
 			while (!timeout(timer,100) && send_cmd(cmd, 0));
 /* Set R/W block length to 512 */
 			if (timeout(timer,100) || send_cmd(CMD16, 512) != 0)
+            {
 				ty = 0;
+            }
 		}
 	}
 	CardType = ty;
 	release_spi();
 
-	if (ty)
+	if (ty > 0)
     {			                    /* Initialization succeeded */
-		Stat &= ~STA_NOINIT;		/* Clear STA_NOINIT */
+		diskStatus &= ~STA_NOINIT;		/* Clear STA_NOINIT */
 		interface_speed(INTERFACE_FAST);
 	}
     else
     {			                    /* Initialization failed */
 		power_off();
 	}
-
-	return Stat;
+	return diskStatus;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -808,13 +801,13 @@ DSTATUS disk_initialize(BYTE drv)
 @param[in] drv: BYTE Physical drive number (only 0 allowed)
 @returns DSTATUS
 
-Globals Stat: DSTATUS disk status.
+Globals diskStatus: DSTATUS disk status.
 */
 
 DSTATUS disk_status(BYTE drv)
 {
-	if (drv) return STA_NOINIT;		/* Supports only single drive */
-	return Stat;
+	if (drv > 0) return STA_NOINIT;		/* Supports only single drive */
+	return diskStatus;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -826,7 +819,7 @@ DSTATUS disk_status(BYTE drv)
 @param[in] count: BYTE number of sectors to read
 @returns DRESULT success (RES_OK) or fail.
 
-Globals Stat: DSTATUS disk status.
+Globals diskStatus: DSTATUS disk status.
 */
 
 DRESULT disk_read(BYTE drv, BYTE* buff, DWORD sector, UINT count)
@@ -837,7 +830,7 @@ DRESULT disk_read(BYTE drv, BYTE* buff, DWORD sector, UINT count)
     {
         res = RES_PARERR;
     }
-    else if (Stat & STA_NOINIT) /* Drive not initialized */
+    else if (diskStatus & STA_NOINIT) /* Drive not initialized */
     {
         res = RES_NOTRDY;
     }
@@ -882,13 +875,15 @@ DRESULT disk_read(BYTE drv, BYTE* buff, DWORD sector, UINT count)
 /*---------------------------------------------------------------------------*/
 /** @brief Write Disk Sectors
 
+Only compiled if disk is not read only.
+
 @param[in] drv: BYTE Physical drive number (only 0 allowed)
 @param[in] *buff: BYTE Pointer to buffer
 @param[in] sector: DWORD starting sector number
 @param[in] count: BYTE number of sectors to read
 @returns DRESULT success (RES_OK) or fail.
 
-Globals Stat: DSTATUS disk status.
+Globals diskStatus: DSTATUS disk status.
 */
 
 #if _FS_READONLY == 0
@@ -901,11 +896,11 @@ DRESULT disk_write(BYTE drv, const BYTE* buff, DWORD sector, UINT count)
     {
         res = RES_PARERR;
     }
-    else if (Stat & STA_NOINIT) /* Drive not initialized */
+    else if (diskStatus & STA_NOINIT) /* Drive not initialized */
     {
         res = RES_NOTRDY;
     }
-    else if (Stat & STA_PROTECT)/* Write protoected */
+    else if (diskStatus & STA_PROTECT)/* Write protected */
     {
         res = RES_WRPRT;
     }
@@ -945,7 +940,6 @@ DRESULT disk_write(BYTE drv, const BYTE* buff, DWORD sector, UINT count)
         release_spi();
         if (count > 0) res = RES_ERROR;
     }
-//    if (res != RES_OK) dataMessageSend("DWRITE",res,error);
 
     return res;
 }
@@ -969,7 +963,7 @@ DRESULT disk_write(BYTE drv, const BYTE* buff, DWORD sector, UINT count)
 @param[in] *buff: BYTE Pointer to buffer
 @returns DRESULT success (RES_OK) or fail (RES_ERROR).
 
-Globals Stat: DSTATUS disk status.
+Globals diskStatus: DSTATUS disk status.
 */
 
 #if (STM32_SD_DISK_IOCTRL == 1)
@@ -1011,14 +1005,13 @@ DRESULT disk_ioctl(BYTE drv,BYTE ctrl,void *buff)
         }
         else
         {
-            if (Stat & STA_NOINIT) res = RES_NOTRDY;
+            if (diskStatus & STA_NOINIT) res = RES_NOTRDY;
             else switch (ctrl)
             {
 /* Make sure no pending write process */
             case CTRL_SYNC :
                 SELECT();
-                if (wait_ready() == 0xFF)
-                    res = RES_OK;
+                if (wait_ready()) res = RES_OK;
                 break;
 /* Get number of sectors on the disk (DWORD) */
             case GET_SECTOR_COUNT :
@@ -1123,7 +1116,6 @@ DRESULT disk_ioctl(BYTE drv,BYTE ctrl,void *buff)
 
         release_spi();
     }
-//    if ((ctrl != 0) && (res != RES_OK)) dataMessageSend("DIOCTL",res,ctrl);
 
     return res;
 }
@@ -1135,39 +1127,39 @@ DRESULT disk_ioctl(BYTE drv,BYTE ctrl,void *buff)
 This function must be called in period of 10ms, generally by the systick ISR.
 It counts up a timer and checks for write protect and card presence.
 
-Globals Stat: DSTATUS disk status.
+Globals diskStatus: DSTATUS disk status.
         Timer1: DWORD a real-time variable used to trigger events.
 Statics pv: DWORD previous value of socket status.
 */
 
 void disk_timerproc(void)
 {
-	static DWORD pv;          /* previous reading of socket status */
-	DWORD ns;
-	BYTE s;
+	static DWORD current;       /* last reading of socket status */
+	DWORD previous;
+	BYTE status;
 
     Timer1++;
 
-	ns = pv;
+	previous = current;
 /* Sample the socket switch to check empty or write protect */
-	pv = socket_is_empty() | socket_is_write_protected();
+	current = socket_is_empty() | socket_is_write_protected();
 
-    if (ns == pv)           /* Debounce: no change since last reading */
-    {                       /* Have contacts stabled? */
-		s = Stat;
+    if (previous == current)    /* Debounce: no change since last reading */
+    {                           /* Have contacts stabled? */
+		status = diskStatus;
 
-		if (pv & socket_state_mask_wp)      /* WP is H (write protected) */
-			s |= STA_PROTECT;
-		else                                /* WP is L (write enabled) */
-			s &= ~STA_PROTECT;
+		if (current & socket_state_mask_wp)     /* WP is H (write protected) */
+			status |= STA_PROTECT;
+		else                                    /* WP is L (write enabled) */
+			status &= ~STA_PROTECT;
 
-		if (pv & socket_state_mask_cp)      /* INS = H (Socket empty) */
-			s |= (STA_NODISK | STA_NOINIT);
-		else                                /* INS = L (Card inserted) */
-			s &= ~STA_NODISK;
+		if (current & socket_state_mask_cp)     /* INS = H (Socket empty) */
+			status |= (STA_NODISK | STA_NOINIT);
+		else                                    /* INS = L (Card inserted) */
+			status &= ~STA_NODISK;
 
-/* Stat is a global status for card inserted and write protect */
-		Stat = s;
+/* diskStatus is a global status for card present, inserted and write protected */
+		diskStatus = status;
 	}
 }
 
