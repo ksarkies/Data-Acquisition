@@ -44,8 +44,6 @@ static FIL file[MAX_OPEN_FILES];    /* file descriptions. */
 static FILINFO fileInfo[MAX_OPEN_FILES];    /* file information (open files) */
 static bool fileUsable;
 static uint8_t filemap;             /* map of open file handles */
-static uint8_t writeFileHandle;
-static uint8_t readFileHandle;
 
 /*--------------------------------------------------------------------------*/
 /* Local Prototypes */
@@ -68,8 +66,6 @@ uint8_t init_file(void)
     fileUsable = (fileStatus == FR_OK);
 
 /* Initialise some global variables */
-    writeFileHandle = 0xFF;
-    readFileHandle = 0xFF;
     uint8_t i=0;
     for (i=0; i<MAX_OPEN_FILES; i++) fileInfo[i].fname[0] = 0;
     filemap = 0;
@@ -230,7 +226,6 @@ fileInfo[] an array of file information on open files.
 
 uint8_t open_write_file(char* fileName, uint8_t* writeFileHandle)
 {
-sendString("fT",fileName);
     FRESULT fileStatus = FR_OK;
     uint8_t fileHandle = 0xFF;
 /* Null file name */
@@ -243,25 +238,20 @@ sendString("fT",fileName);
     {
         fileHandle = find_file_handle();
 /* Unable to be allocated */
-sendResponse("ft",fileHandle);
         if (fileHandle >= MAX_OPEN_FILES)
             fileStatus = FR_TOO_MANY_OPEN_FILES;
         else
         {
 /* Try to open a file write/read, creating it if necessary.
 Skip to the end of the file to append. */
-sendString("fT","Opening");
             fileStatus = f_open(&file[fileHandle], fileName, \
                                 FA_OPEN_APPEND | FA_READ | FA_WRITE);
-sendString("fT","Opened");
 /* Check existence of file and get information array entry. */
             if (fileStatus == FR_OK)
                 fileStatus = f_stat(fileName, fileInfo+fileHandle);
-sendString("fT","Statted");
             if (fileStatus != FR_OK)
             {
                 delete_file_handle(fileHandle);
-sendString("fT","Handle Deleted");
                 fileHandle = 0xFF;
             }
             *writeFileHandle = fileHandle;
@@ -418,7 +408,8 @@ Globals:
 file[] an array of opened file object structures defined by ChaN FAT FS.
 fileInfo[] an array of file information on open files.
 
-@param[in] uint8_t: file handle.
+@param[in] uint8_t*: file handle. This is returned as 0xFF if the deletion
+                        is successful, otherwise unchanged.
 @returns uint8_t: status of operation.
 */
 
@@ -435,14 +426,10 @@ uint8_t close_file(uint8_t fileHandle)
     }
     else
     {
-/* Check if it is one of the currently opened files. */
-        if (writeFileHandle == fileHandle) writeFileHandle = 0xFF;
-        else if (readFileHandle == fileHandle) readFileHandle = 0xFF;
 /* Close the file and delete the handle. */
         fileInfo[fileHandle].fname[0] = 0;
         delete_file_handle(fileHandle);
         fileStatus = f_close(&file[fileHandle]);
-        fileHandle = 0xFF;
     }
     return fileStatus;
 }
@@ -460,7 +447,7 @@ if the file handle is not valid.
 void get_file_name(uint8_t fileHandle, char* fileName)
 {
     if (valid_file_handle(fileHandle))
-        fileName = fileInfo[fileHandle].fname;
+        stringCopy(fileName, fileInfo[fileHandle].fname);
     else
         fileName[0] = 0;
 }
