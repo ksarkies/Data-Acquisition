@@ -5,13 +5,13 @@
 #include "../libs/hardware.h"
 #include <time.h>
 
+
 /* This provides a 32 bit integer construct of time based on years since 1980.
 Seconds are in 2 second increments. The tm struct gives years since 1900. */
 DWORD get_fattime (void)
 {
 	DWORD res;
-	time_t currentTime = 0;
-//	time_t currentTime = (time_t)getSecondsCount();
+	time_t currentTime = (time_t)getSecondsCount();
     struct tm *rtc = localtime(&currentTime);
 
 	res =  (((DWORD)rtc->tm_year - 80) << 25)

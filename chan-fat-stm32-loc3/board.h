@@ -46,21 +46,17 @@ Check port settings against those set in the board.h header.
 /* set to 1 to provide a disk_ioctrl function even if not needed by the FatFs */
 #define STM32_SD_DISK_IOCTRL_FORCE      FALSE
 
-//#define STM32_SD_USE_DMA
+#define STM32_SD_USE_DMA
 
-//#define USE_ET_STAMP_STM32
-//#define USE_ET_STM32F103
-//#define USE_EK_STM32F
-//#define USE_STM32_P103
-//#define USE_MINI_STM32
+/* The board being used is defined in the makefile */
 
 #if defined USE_ET_STM32F103
-/* GPIO C6 is WP, CP not used, A4 is CS, A5 is SCK, A6 is MISO, A7 is MOSI */
+/* GPIO C6 is WP, A8 is CP (not used), A4 is CS, A5 is SCK, A6 is MISO, A7 is MOSI, */
  #define CARD_SUPPLY_SWITCHABLE   FALSE
  #define SOCKET_WP_CONNECTED      TRUE  /* write-protect socket-switch */
  #define SOCKET_CP_CONNECTED      FALSE /* card-present socket-switch (clashes with USART1) */
- #define GPIO_PORT_WP             GPIOC
  #define RCC_GPIO                 RCC_APB2ENR
+ #define GPIO_PORT_WP             GPIOC
  #define RCC_GPIO_PORT_WP         RCC_APB2ENR_IOPCEN
  #define GPIOWP                   GPIO6
  #define GPIO_MODE_WP             GPIO_CNF_INPUT_FLOAT /* external resistor */

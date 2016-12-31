@@ -245,15 +245,17 @@ uint8_t open_write_file(char* fileName, uint8_t* writeFileHandle)
 /* Try to open a file write/read, creating it if necessary.
 Skip to the end of the file to append. */
             fileStatus = f_open(&file[fileHandle], fileName, \
-                                FA_OPEN_APPEND | FA_READ | FA_WRITE);
+                                FA_OPEN_ALWAYS | FA_READ | FA_WRITE);
 /* Check existence of file and get information array entry. */
             if (fileStatus == FR_OK)
-                fileStatus = f_stat(fileName, fileInfo+fileHandle);
+                fileStatus = f_lseek(&file[fileHandle], f_size(file));
             if (fileStatus != FR_OK)
             {
                 delete_file_handle(fileHandle);
                 fileHandle = 0xFF;
             }
+            if (fileStatus == FR_OK)
+                f_stat(fileName, fileInfo+fileHandle);
             *writeFileHandle = fileHandle;
         }
     }

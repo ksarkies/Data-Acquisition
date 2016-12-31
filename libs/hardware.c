@@ -433,14 +433,14 @@ The LSE clock appears to be already running.
 
 void rtc_setup(void)
 {
-	/* Wake up and clear RTC registers using the LSE as clock. */
-	/* Set prescaler, using value for 1Hz out. */
+/* Wake up and clear RTC registers using the LSE as clock. */
+/* Set prescaler, using value for 1Hz out. */
 	rtc_auto_awake(RCC_LSE,0x7FFF);
 
-	/* Clear the RTC counter - some counts will occur before prescale is set. */
+/* Clear the RTC counter - some counts will occur before prescale is set. */
 	rtc_set_counter_val(0);
 
-	/* Set the Alarm to trigger in interrupt mode on EXTI17 for wakeup */
+/* Set the Alarm to trigger in interrupt mode on EXTI17 for wakeup */
 	nvic_enable_irq(NVIC_RTC_ALARM_IRQ);
 	EXTI_IMR |= EXTI17;
 	exti_set_trigger(EXTI17,EXTI_TRIGGER_RISING);

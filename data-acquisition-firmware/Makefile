@@ -39,10 +39,10 @@ CFLAGS	        += $(CDEFS)
 
 LDSCRIPT        = stm32-h103RBT6.ld
 
-LDFLAGS		    += -I . -Wl,--start-group -lc -lgcc -lnosys -Wl,--end-group \
-			       -T$(LDSCRIPT) -L$(DRIVERS_DIR)/lib -lopencm3_stm32f1 \
-			       -nostartfiles -Wl,--gc-sections -mthumb -march=armv7 \
-			       -mfix-cortex-m3-ldrd -msoft-float
+LDFLAGS	        += -I . -lc -T$(LDSCRIPT) -L$(DRIVERS_DIR)/lib -nostartfiles \
+                    -Wl,--gc-sections
+LDFLAGS	        += -lopencm3_stm32f1
+LDFLAGS	        += -specs=nosys.specs
 
 # The libopencm3 library is assumed to exist in libopencm3/lib, otherwise add files here
 CFILES		    = $(PROJECT)-stm32f103.c $(PROJECT)-objdic.c

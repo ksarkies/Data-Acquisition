@@ -51,12 +51,14 @@ typedef bool BOOL;
 #include "board.h"
 #include "comms.h"
 
-/* We can use DMA to free the processor a bit */
-#define STM32_SD_USE_DMA
-
 #ifdef STM32_SD_USE_DMA
 // #warning "Information only: using DMA"
-#pragma message "*** Using DMA for MMC Card Access***"
+#pragma message "*** Using DMA for MMC Card Access ***"
+#endif
+
+#ifdef USE_ET_STM32F103
+// #warning "Information only: using ET_STM32F103"
+#pragma message "*** Using ET_STM32F103 board ***"
 #endif
 
 /* Definitions for MMC/SDC command */
@@ -522,7 +524,7 @@ peripheral will not send any data out.
 
 	spi_enable(SPI_SD);
 
-    gpio_clear(GPIOB, GPIO12);
+    SELECT();
 
 /* drain SPI */
 	while (!(SPI_SR(SPI_SD) & SPI_SR_TXE));
@@ -784,12 +786,12 @@ DSTATUS disk_initialize(BYTE drv)
 	release_spi();
 
 	if (ty > 0)
-    {			                    /* Initialization succeeded */
-		diskStatus &= ~STA_NOINIT;		/* Clear STA_NOINIT */
+    {			                            /* Initialization succeeded */
+		diskStatus &= ~STA_NOINIT;		    /* Clear STA_NOINIT */
 		interface_speed(INTERFACE_FAST);
 	}
     else
-    {			                    /* Initialization failed */
+    {			                            /* Initialization failed */
 		power_off();
 	}
 	return diskStatus;

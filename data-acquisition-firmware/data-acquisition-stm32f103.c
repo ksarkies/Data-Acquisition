@@ -55,6 +55,7 @@ Initial 23 November 2016
 #include "../libs/hardware.h"
 #include "../libs/comms.h"
 #include "../libs/file.h"
+#include "../libs/timelib.h"
 #include "data-acquisition-stm32f103.h"
 #include "data-acquisition-objdic.h"
 
@@ -83,6 +84,8 @@ int main(void)
 	clock_setup();
 	gpio_setup();
     systickSetup();
+    rtc_setup();
+    setTimeFromString("2014-04-17T12:33:48");
 //	adc_setup();
 	dma_adc_setup();
 	usart1_setup();
@@ -161,9 +164,13 @@ Data Request Commands */
         switch (line[1])
         {
 /**
+Return the internal time.
  */
-        case 'S':
+        case 'H':
             {
+                char timeString[20];
+                putTimeToString(timeString);
+                sendString("pH",timeString);
             }
         }
     }
