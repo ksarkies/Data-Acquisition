@@ -198,7 +198,7 @@ Parameter Setting Commands */
 /* Hxxxx Set time from an ISO 8601 formatted string. */
         case 'H':
             {
- //               setTimeFromString((char*)line+2);
+                setTimeFromString((char*)line+2);
                 break;
             }
 /* M-, M+ Turn on/off data messaging (mainly for debug) */
@@ -212,7 +212,7 @@ Parameter Setting Commands */
         case 'r':
             {
                 if (line[2] == '-') configData.config.recording = false;
-//                else if ((line[2] == '+') && (writeFileHandle < 0x0FF))
+                else if ((line[2] == '+') && (writeFileHandle < 0x0FF))
                     configData.config.recording = true;
                 break;
             }

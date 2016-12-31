@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>DataAcquisitionMainDialog</class>
+ <widget class="QDialog" name="DataAcquisitionMainDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>723</width>
+    <height>650</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Solar Power Management</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">background-color:white;</string>
+  </property>
+  <widget class="QLabel" name="title">
+   <property name="geometry">
+    <rect>
+     <x>195</x>
+     <y>15</y>
+     <width>306</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Andale Mono</family>
+     <pointsize>18</pointsize>
+    </font>
+   </property>
+   <property name="text">
+    <string>Data Acquisition Unit</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="errorLabel">
+   <property name="geometry">
+    <rect>
+     <x>50</x>
+     <y>620</y>
+     <width>587</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QWidget" name="layoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>103</x>
+     <y>547</y>
+     <width>471</width>
+     <height>29</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <widget class="QPushButton" name="configureButton">
+      <property name="toolTip">
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;System configuration and advanced configuration choices for algorithms.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color:black;color:white;</string>
+      </property>
+      <property name="text">
+       <string>Configure</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="recordingButton">
+      <property name="toolTip">
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Open or close files on the BMS for recording history, and start and pause recording actions.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color:black;color:white;</string>
+      </property>
+      <property name="text">
+       <string>Record</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="saveFileButton">
+      <property name="toolTip">
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Save incoming data to a local file&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color:black;color:white;</string>
+      </property>
+      <property name="text">
+       <string>Open File</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="closeFileButton">
+      <property name="toolTip">
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Save incoming data to a local file&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color:black;color:white;</string>
+      </property>
+      <property name="text">
+       <string>Close File</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QPushButton" name="connectButton">
+   <property name="geometry">
+    <rect>
+     <x>388</x>
+     <y>580</y>
+     <width>89</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>Connect to the TCP address and port as configured</string>
+   </property>
+   <property name="text">
+    <string>Connect</string>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="sourceComboBox">
+   <property name="geometry">
+    <rect>
+     <x>178</x>
+     <y>580</y>
+     <width>121</width>
+     <height>29</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>Source of data stream</string>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="baudrateComboBox">
+   <property name="geometry">
+    <rect>
+     <x>300</x>
+     <y>580</y>
+     <width>87</width>
+     <height>29</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>Source of data stream</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="temperature">
+   <property name="geometry">
+    <rect>
+     <x>294</x>
+     <y>62</y>
+     <width>95</width>
+     <height>52</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>18</pointsize>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color:lightgreen;</string>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::Box</enum>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="scaledContents">
+    <bool>true</bool>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="temperatureLabel">
+   <property name="geometry">
+    <rect>
+     <x>300</x>
+     <y>115</y>
+     <width>136</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Temperature</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="voltageLabel">
+   <property name="geometry">
+    <rect>
+     <x>236</x>
+     <y>207</y>
+     <width>56</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Voltage</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="voltage">
+   <property name="geometry">
+    <rect>
+     <x>191</x>
+     <y>149</y>
+     <width>125</width>
+     <height>50</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>18</pointsize>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color:lightblue;</string>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::Box</enum>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="scaledContents">
+    <bool>true</bool>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="current">
+   <property name="geometry">
+    <rect>
+     <x>372</x>
+     <y>149</y>
+     <width>125</width>
+     <height>50</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>18</pointsize>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color:lightblue;</string>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::Box</enum>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="scaledContents">
+    <bool>true</bool>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="currentLabel">
+   <property name="geometry">
+    <rect>
+     <x>400</x>
+     <y>205</y>
+     <width>86</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Current</string>
+   </property>
+  </widget>
+ </widget>
+ <resources>
+  <include location="../../../../../data/home/ksarkies/Projects/Battery-Management-System/gui/power-management-gui.qrc"/>
+  <include location="../../../../../data/home/ksarkies/Projects/Battery-Management-System/gui/power-management-gui.qrc"/>
+ </resources>
+ <connections/>
+</ui>
