@@ -77,18 +77,17 @@ extern union ConfigGroup configData;
 
 int main(void)
 {
-//	uint8_t channel_array[16];
-//	uint16_t i = 0;
+    uint8_t channel_array[16];
+    uint16_t i = 0;
 
     setGlobalDefaults();
-	clock_setup();
-	gpio_setup();
+    clock_setup();
+    gpio_setup();
     systickSetup();
     rtc_setup();
-    setTimeFromString("2014-04-17T12:33:48");
-//	adc_setup();
-	dma_adc_setup();
-	usart1_setup();
+    adc_setup();
+    dma_adc_setup();
+    usart1_setup();
     init_comms_buffers();
     init_file();
     writeFileHandle = 0xFF;
@@ -240,14 +239,6 @@ Data is not written to the file externally. */
     {
         switch (line[1])
         {
-/* Z Create a standard file system on the memory volume */
-            case 'Z':
-            {
-                sendString("D","Creating Filesystem");
-                uint8_t fileStatus = make_filesystem();
-                sendResponse("fE",(uint8_t)fileStatus);
-                break;
-            }
 /* F Return number of free clusters followed by the cluster size in sectors. */
             case 'F':
             {
@@ -332,18 +323,26 @@ separated list. */
             }
 /* s Return the name and size of open files.
 Each open file is reported with a separate message. */
-            case 'S':
+            case 's':
             {
-                uint8_t fileHandle;
-                for (fileHandle=0; fileHandle<8; fileHandle++)
+                commsPrintString("fs,");
+                commsPrintInt((int)getControls());
+                commsPrintString(",");
+                uint8_t writeStatus;
+                commsPrintInt(writeFileHandle);
+                commsPrintString(",");
+                if (writeFileHandle < 0xFF)
                 {
-                    if (valid_file_handle(fileHandle))
-                    {
-                        char fileName[20];
-                        get_file_name(fileHandle, fileName);
-                        sendString("fS",fileName);
-                    }
+                    commsPrintString(writeFileName);
+                    commsPrintString(",");
                 }
+                commsPrintInt(readFileHandle);
+                if (readFileHandle < 0xFF)
+                {
+                    commsPrintString(",");
+                    commsPrintString(readFileName);
+                }
+                commsPrintString("\r\n");
                 break;
             }
 /* Cf Close File specified by f=file handle. */
@@ -374,6 +373,14 @@ Each open file is reported with a separate message. */
             case 'M':
             {
                 uint8_t fileStatus = init_file();
+                sendResponse("fE",(uint8_t)fileStatus);
+                break;
+            }
+/* Z Create a standard file system on the memory volume */
+            case 'Z':
+            {
+                sendString("D","Creating Filesystem");
+                uint8_t fileStatus = make_filesystem();
                 sendResponse("fE",(uint8_t)fileStatus);
                 break;
             }
