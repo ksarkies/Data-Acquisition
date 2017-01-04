@@ -28,8 +28,8 @@ Here the data stream from the remote is received and saved to a file.
 
 #include "data-acquisition.h"
 #include "data-acquisition-main.h"
-//#include "data-acquisition-record.h"
-//#include "data-acquisition-configure.h"
+#include "data-acquisition-record.h"
+#include "data-acquisition-configure.h"
 #include <QApplication>
 #include <QString>
 #include <QLineEdit>
@@ -214,6 +214,16 @@ alive. Also check for calibration as time messages stop during this process. */
                 .toFloat(),0,'f',0));
     }
 
+/* Messages for the File Module start with f */
+    if ((size > 0) && (firstField.left(1) == "f"))
+    {
+        emit this->recordMessageReceived(response);
+    }
+/* Messages for the Configure Module start with p or certain of the data responses */
+    if ((size > 0) && (firstField.left(1) == "p"))
+    {
+        emit this->configureMessageReceived(response);
+    }
 /* This allows debug messages to be displayed on the terminal. */
     if ((size > 0) && (firstField.left(1) == "D"))
     {
@@ -293,6 +303,38 @@ void DataAcquisitionGui::on_closeFileButton_clicked()
         saveFile = QString();
     }
 }
+//-----------------------------------------------------------------------------
+/** @brief Call up the Recording Window.
+
+*/
+
+void DataAcquisitionGui::on_recordingButton_clicked()
+{
+    DataAcquisitionRecordGui* dataAcquisitionRecordForm =
+                    new DataAcquisitionRecordGui(port,this);
+    dataAcquisitionRecordForm->setAttribute(Qt::WA_DeleteOnClose);
+    connect(this, SIGNAL(recordMessageReceived(const QString&)),
+                    dataAcquisitionRecordForm, SLOT(onMessageReceived(const QString&)));
+    dataAcquisitionRecordForm->exec();
+}
+
+//-----------------------------------------------------------------------------
+/** @brief Call up the Configure Window.
+
+*/
+
+void DataAcquisitionGui::on_configureButton_clicked()
+{
+/*
+    DataAcquisitionConfigGui* dataAcquisitionConfigForm =
+                    new DataAcquisitionConfigGui(port,this);
+    dataAcquisitionConfigForm->setAttribute(Qt::WA_DeleteOnClose);
+    connect(this, SIGNAL(configureMessageReceived(const QString&)),
+                    dataAcquisitionConfigForm, SLOT(onMessageReceived(const QString&)));
+    dataAcquisitionConfigForm->exec();
+*/
+}
+
 /*---------------------------------------------------------------------------*/
 /** @brief Show an error condition in the Error label.
 

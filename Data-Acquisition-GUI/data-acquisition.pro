@@ -13,10 +13,10 @@ CONFIG          += qt warn_on release
 
 # Input
 FORMS           += data-acquisition-main.ui
-#FORMS           += data-acquisition-record.ui
+FORMS           += data-acquisition-record.ui
 HEADERS         += data-acquisition.h
 HEADERS         += data-acquisition-main.h
-#HEADERS         += data-acquisition-record.h
+HEADERS         += data-acquisition-record.h
 SOURCES         += data-acquisition.cpp
 SOURCES         += data-acquisition-main.cpp
-#SOURCES         += data-acquisition-record.cpp
+SOURCES         += data-acquisition-record.cpp

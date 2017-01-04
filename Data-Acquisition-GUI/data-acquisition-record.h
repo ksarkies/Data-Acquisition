@@ -26,10 +26,12 @@
  ***************************************************************************/
 
 #ifndef DATA_ACQUISITION_RECORD_H
-#define DATA_ACQUISITIONN_RECORD_H
+#define DATA_ACQUISITION_RECORD_H
 
 #include "data-acquisition.h"
 #include "ui_data-acquisition-record.h"
+#include <QSerialPort>
+#include <QSerialPortInfo>
 #include <QDialog>
 #include <QStandardItemModel>
 
@@ -42,11 +44,7 @@ class DataAcquisitionRecordGui : public QDialog
 {
     Q_OBJECT
 public:
-#ifdef SERIAL
-    DataAcquisitionRecordGui(SerialPort* socket, QWidget* parent = 0);
-#else
-    DataAcquisitionRecordGui(QTcpSocket* socket, QWidget* parent = 0);
-#endif
+    DataAcquisitionRecordGui(QSerialPort* socket, QWidget* parent = 0);
     ~DataAcquisitionRecordGui();
 private slots:
     void on_deleteButton_clicked();
@@ -60,11 +58,12 @@ private slots:
     void on_closeButton_clicked();
 private:
 // User Interface object instance
-    Ui::DataAcquisitionRecordDialog WeatherStationRecordUi;
+    Ui::DataAcquisitionRecordDialog DataAcquisitionRecordUi;
     int extractValue(const QString &response);
     void requestRecordingStatus();
     void refreshDirectory();
     void getFreeSpace();
+    QSerialPort* socket;
     int writeFileHandle;
     int readFileHandle;
     bool recordingOn;
