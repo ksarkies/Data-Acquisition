@@ -56,6 +56,7 @@ Initial 23 November 2016
 #include "../libs/comms.h"
 #include "../libs/file.h"
 #include "../libs/timelib.h"
+#include "../libs/board-defs.h"
 #include "data-acquisition-stm32f103.h"
 #include "data-acquisition-objdic.h"
 
@@ -67,6 +68,8 @@ static void parseCommand(uint8_t* line);
 /* Globals */
 static uint8_t writeFileHandle;
 static uint8_t readFileHandle;
+static char writeFileName[12];
+static char readFileName[12];
 
 /* These configuration variables are part of the Object Dictionary. */
 /* This is defined in power-management-objdic and is updated in response to
@@ -77,26 +80,51 @@ extern union ConfigGroup configData;
 
 int main(void)
 {
-    uint8_t channel_array[16];
-    uint16_t i = 0;
-
     setGlobalDefaults();
     clock_setup();
     gpio_setup();
     systickSetup();
     rtc_setup();
-    adc_setup();
+
     dma_adc_setup();
+    adc_setup();
+    uint8_t channel_array[NUM_CHANNEL];
+    channel_array[0] = ADC_CHANNEL_0;
+    channel_array[1] = ADC_CHANNEL_1;
+    channel_array[2] = ADC_CHANNEL_2;
+    channel_array[3] = ADC_CHANNEL_3;
+    channel_array[4] = ADC_CHANNEL_4;
+    channel_array[5] = ADC_CHANNEL_5;
+    channel_array[6] = ADC_CHANNEL_6;
+    channel_array[7] = ADC_CHANNEL_7;
+    channel_array[8] = ADC_CHANNEL_8;
+    channel_array[9] = ADC_CHANNEL_9;
+    channel_array[10] = ADC_CHANNEL_10;
+    channel_array[11] = ADC_CHANNEL_11;
+    channel_array[12] = ADC_CHANNEL_TEMPERATURE;
+    adc_set_regular_sequence(ADC1, NUM_CHANNEL, channel_array);
+
+    uint16_t i = 0;
+    uint32_t avg[NUM_CHANNEL];
+    uint64_t var[NUM_CHANNEL];
+
+    setDelayCount(configData.config.measurementInterval);
+
     usart1_setup();
     init_comms_buffers();
-    init_file();
+
+    init_file_system();
     writeFileHandle = 0xFF;
     readFileHandle = 0xFF;
+    writeFileName[0] = 0;
+    readFileName[0] = 0;
 
 /* Main event loop */
 	while (1)
 	{
-/* Command Line Interface receiver interpretation. */
+/* -------- CLI ------------*/
+/* Command Line Interface receiver interpretation.
+ Process incoming commands as they appear on the serial input.*/
         static uint8_t line[80];
         static uint8_t characterPosition = 0;
         if (receive_data_available())
@@ -109,6 +137,46 @@ int main(void)
                 parseCommand(line);
             }
             else line[characterPosition++] = character;
+        }
+
+/* -------- Measurements --------- */
+        if (getDelayCount() == 0)
+        {
+            setDelayCount(configData.config.measurementInterval);
+/* Clear stats and setup array of selected channels for conversion */
+            uint8_t i = 0;
+	        for (i = 0; i < NUM_CHANNEL; i++)
+	        {
+                avg[i] = 0;
+                var[i] = 0;
+	        }
+/* Run a number of samples and average */
+            uint8_t sample = 0;
+            uint8_t numSamples = configData.config.numberSamples;
+            if (numSamples < 1) numSamples = 1;
+            for (sample = 0; sample < numSamples; sample++)
+            {
+/* Start conversion and wait for conversion end. */
+	            adc_start_conversion_regular(ADC1);
+                while (! adcEOC());
+	            for (i = 0; i < NUM_CHANNEL; i++)
+	            {
+                    avg[i] += adcValue(i);
+                    var[i] += avg[i]*avg[i];
+	            }
+            }
+            int16_t temperature = ((avg[12]/numSamples-TEMPERATURE_OFFSET)
+                                        *TEMPERATURE_SCALE)/4096;
+/* ------------- Transmit and save to file -----------*/
+/* Send out a time string */
+            char timeString[20];
+            putTimeToString(timeString);
+            sendString("pH",timeString);
+            recordString("pH",timeString,writeFileHandle);
+/* Send out temperature measurement. */
+            sendResponse("dT",temperature);
+            recordSingle("dT",temperature,writeFileHandle);
+/* Send off accumulated data */
         }
 	}
 
@@ -287,7 +355,11 @@ Returns a file handle. On error, file handle is 0xFF. */
                 {
                     uint8_t fileStatus =
                         open_write_file((char*)line+2, &writeFileHandle);
-                    sendResponse("fW",writeFileHandle);
+                    if (fileStatus == 0)
+                    {
+                        stringCopy(writeFileName,(char*)line+2);
+                        sendResponse("fW",writeFileHandle);
+                    }
                     sendResponse("fE",(uint8_t)fileStatus);
                 }
                 break;
@@ -301,7 +373,11 @@ Returns a file handle. On error, file handle is 0xFF. */
                 {
                     uint8_t fileStatus = 
                         open_read_file((char*)line+2, &readFileHandle);
-                    sendResponse("fR",readFileHandle);
+                    if (fileStatus == 0)
+                    {
+                        stringCopy(readFileName,(char*)line+2);
+                         sendResponse("fR",readFileHandle);
+                    }
                     sendResponse("fE",(uint8_t)fileStatus);
                 }
                 break;
@@ -321,8 +397,9 @@ separated list. */
                 }
                 break;
             }
-/* s Return the name and size of open files.
-Each open file is reported with a separate message. */
+/* s Send a status message containing: software switches and names of open
+files, with open write filehandle and filename first followed by read filehandle
+and filename, or blank if any file is not open. */
             case 's':
             {
                 commsPrintString("fs,");
@@ -349,17 +426,8 @@ Each open file is reported with a separate message. */
             case 'C':
             {
                 uint8_t fileHandle = asciiToInt((char*)line+2);
-                if (valid_file_handle(fileHandle))
-                {
-                    uint8_t fileStatus = close_file(fileHandle);
-/* Check if it is one of the currently opened files and disable it. */
-                    if (fileStatus == 0)
-                    {
-                        if (writeFileHandle == fileHandle) writeFileHandle = 0xFF;
-                        else if (readFileHandle == fileHandle) readFileHandle = 0xFF;
-                    }
-                    sendResponse("fE",(uint8_t)fileStatus);
-                }
+                uint8_t fileStatus = close_file(&fileHandle);
+                sendResponse("fE",(uint8_t)fileStatus);
                 break;
             }
 /* X Delete File. */
@@ -372,7 +440,7 @@ Each open file is reported with a separate message. */
 /* M Reinitialize the memory card. */
             case 'M':
             {
-                uint8_t fileStatus = init_file();
+                uint8_t fileStatus = init_file_system();
                 sendResponse("fE",(uint8_t)fileStatus);
                 break;
             }
@@ -386,17 +454,6 @@ Each open file is reported with a separate message. */
             }
         }
     }
-}
-
-/*--------------------------------------------------------------------------*/
-/* ADC ISR
-
-Respond to ADC EOC at end of scan and send data block.
-Print the result in decimal and separate with an ASCII dash.
-*/
-
-void adc1_2_isr(void)
-{
 }
 
 /*--------------------------------------------------------------------------*/

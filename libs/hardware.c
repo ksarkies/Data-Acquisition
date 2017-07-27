@@ -57,10 +57,12 @@ extern uint32_t __configBlockEnd;
 
 /* Local Variables */
 static uint32_t v[NUM_CHANNEL]; /* Buffer used by DMA to dump A/D conversions */
+static bool adceoc;
 
-/* Time variables needed when systick is the timer */
+/* Time variables needed when systick is used as a timer */
 static uint32_t secondsCount;
 static uint32_t millisecondsCount;
+static uint32_t downCount;
 
 /* This is provided in the FAT filesystem library */
 extern void disk_timerproc();
@@ -218,6 +220,63 @@ void setSecondsCount(uint32_t time)
 }
 
 /*--------------------------------------------------------------------------*/
+/** @brief Read the Down Counter
+
+@returns uint32_t counter value in milliseconds.
+*/
+
+uint32_t getDelayCount()
+{
+    return downCount;
+}
+
+/*--------------------------------------------------------------------------*/
+/** @brief Set the Down Counter
+
+@param[in] time: uint32_t seconds counter value in milliseconds to set.
+*/
+
+void setDelayCount(uint32_t time)
+{
+    downCount = time;
+}
+
+/*--------------------------------------------------------------------------*/
+/** @brief Return and Reset the A/D End of Conversion Flag
+
+This must be retrieved from a global variable set in the ISR as the hardware
+EOC doesn't always change at the end of a conversion (when multiple conversions
+take place).
+
+@returns uint8_t boolean true if the flag was set; false otherwise.
+*/
+
+uint8_t adcEOC(void)
+{
+    if (adceoc)
+    {
+        adceoc = false;
+        return true;
+    }
+    return false;
+}
+
+/*--------------------------------------------------------------------------*/
+/** @brief Return the A/D Conversion Results
+
+Note the channel must be less than the number of channels in the A/D converter.
+
+@param[in] channel: uint8_t A/D channel to be retrieved from the DMA buffer.
+@returns uint32_t last value measured by the A/D converter.
+*/
+
+uint32_t adcValue(uint8_t channel)
+{
+    if (channel > NUM_CHANNEL) return 0;
+    return v[channel];
+}
+
+/*--------------------------------------------------------------------------*/
 /** @brief Clock Enable
 
 The processor system clock is established. */
@@ -331,17 +390,25 @@ PC 0-5 is ADC 10-15
 @param[in] adc_inputs: uint32_t bit map of ports to be used (0-15).
 */
 
-void adc_setup(uint32_t adc_inputs)
+void adc_setup(void)
 {
-/* Set ports on for ADC1 to analogue input. */
-    if (adc_inputs & 0xFF)
-    	gpio_set_mode(GPIOA, GPIO_MODE_INPUT, GPIO_CNF_INPUT_ANALOG, (adc_inputs & 0xFF));
-    if (adc_inputs & 0x300)
-    	gpio_set_mode(GPIOB, GPIO_MODE_INPUT, GPIO_CNF_INPUT_ANALOG, ((adc_inputs) & 0x300 >> 8));
-    if (adc_inputs & 0xFC00)
-    	gpio_set_mode(GPIOC, GPIO_MODE_INPUT, GPIO_CNF_INPUT_ANALOG, ((adc_inputs & 0xFC00) >> 10));
 /* Enable the ADC1 clock on APB2 */
+    rcc_periph_clock_enable(RCC_GPIOA);
+    rcc_periph_clock_enable(RCC_AFIO);
     rcc_periph_clock_enable(RCC_ADC1);
+/* ADC clock should be maximum 14MHz, so divide by 8 from 72MHz. */
+    rcc_set_adcpre(RCC_CFGR_ADCPRE_PCLK2_DIV8);
+	nvic_enable_irq(NVIC_ADC1_2_IRQ);
+/* Make sure the ADC doesn't run during config. */
+    adc_power_off(ADC1);
+/* Configure ADC1 for multiple conversion of channels, stopping after the last one. */
+	adc_enable_scan_mode(ADC1);
+	adc_set_single_conversion_mode(ADC1);
+	adc_enable_external_trigger_regular(ADC1, ADC_CR2_EXTSEL_SWSTART);
+	adc_set_right_aligned(ADC1);
+	adc_set_sample_time_on_all_channels(ADC1, ADC_SMPR_SMP_28DOT5CYC);
+	adc_enable_dma(ADC1);
+	adc_enable_eoc_interrupt(ADC1);
 /* Setup the ADC */
     adc_power_on(ADC1);
     /* Wait for ADC starting up. */
@@ -351,6 +418,7 @@ void adc_setup(uint32_t adc_inputs)
     adc_reset_calibration(ADC1);
     adc_calibrate_async(ADC1);
     while (adc_is_calibrating(ADC1));
+    adceoc = false;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -548,6 +616,9 @@ void sys_tick_handler(void)
 
 /* updated every second if systick is used for the real-time clock. */
     if ((millisecondsCount % 1000) == 0) secondsCount++;
+
+/* down counter for timing. */
+    downCount--;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -575,5 +646,23 @@ void usart1_isr(void)
 		else usart_send(USART1, (data & 0xFF));
 	}
 }
+
+/*--------------------------------------------------------------------------*/
+/* ADC ISR
+
+Respond to ADC EOC at end of scan.
+
+The EOC status is lost when DMA reads the data register, so use a global
+variable.
+*/
+
+void adc1_2_isr(void)
+{
+	gpio_toggle(GPIOB, GPIO9);
+    adceoc = true;
+/* Clear DMA to restart at beginning of data array */
+	dma_adc_setup();
+}
+
 /*--------------------------------------------------------------------------*/
 

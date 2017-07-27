@@ -61,6 +61,10 @@ void setGlobalDefaults(void)
     configData.config.enableSend = true;
 /* Set default recording control variables */
     configData.config.recording = false;
+/* Set default measurement variables */
+    configData.config.measurementInterval = 1000;   /* 1 second intervals */
+    configData.config.numberConversions = 3;
+    configData.config.numberSamples = 16;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -80,6 +84,40 @@ uint32_t writeConfigBlock(void)
     configData.config.validBlock = VALID_BLOCK;
     return flashWriteData((uint32_t*)configDataBlock.data,
                           configData.data, sizeof(configData.config));
+}
+
+/*--------------------------------------------------------------------------*/
+/** @brief Get Recording switch
+
+True if recording has been requested, false otherwise.
+
+@returns bool recording setting.
+*/
+
+bool isRecording(void)
+{
+    return configData.config.recording;
+}
+
+/*--------------------------------------------------------------------------*/
+/** @brief Return a status word showing software controls.
+
+bit  0
+bit  1   if recording,
+bit  2
+bit  3   if measurements are being sent
+bit  4   if debug messages are being sent
+bits 5-15
+
+@returns uint16_t status of controls
+*/
+uint16_t getControls(void)
+{
+    uint16_t controls = 0;
+    if (configData.config.recording) controls |= 1<<1;
+    if (configData.config.measurementSend) controls |= 1<<3;
+    if (configData.config.debugMessageSend) controls |= 1<<4;
+    return controls;
 }
 
 /**@}*/

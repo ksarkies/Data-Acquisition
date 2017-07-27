@@ -33,10 +33,6 @@ K. Sarkies, 9 December 2016
 #include "../data-acquisition-firmware/data-acquisition-objdic.h"
 
 /* Local Prototypes */
-static void commsPrintInt(int32_t value);
-static void commsPrintHex(uint32_t value);
-static void commsPrintString(char* ch);
-static void commsPrintChar(char* ch);
 
 /* Globals */
 uint8_t send_buffer[BUFFER_SIZE+3];
@@ -169,11 +165,10 @@ void sendDebugResponse(char* ident, int32_t parameter)
 /*--------------------------------------------------------------------------*/
 /** @brief Send a string
 
-Use to send a string. This simply abandons the message if it cannot get the
-commsSendSemaphore.
+Use to send a single string.
 
 @param[in] ident: char* Response identifier string
-@param[in] string: char* Single integer parameter.
+@param[in] string: char* Arbitrary length string.
 */
 
 void sendString(char* ident, char* string)

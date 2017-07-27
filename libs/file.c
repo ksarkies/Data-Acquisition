@@ -30,6 +30,7 @@ K. Sarkies, 10 December 2016
 #include "buffer.h"
 #include "comms.h"
 #include "hardware.h"
+#include "../data-acquisition-firmware/data-acquisition-objdic.h"
 
 #define  _BV(bit) (1 << (bit))
 
@@ -59,7 +60,7 @@ The FreeRTOS queue and semaphore are initialised. The file system work area is
 initialised.
 */
 
-uint8_t init_file(void)
+uint8_t init_file_system(void)
 {
 /* initialise the drive working area */
     FRESULT fileStatus = f_mount(&Fatfs[0],"",0);
@@ -415,23 +416,24 @@ fileInfo[] an array of file information on open files.
 @returns uint8_t: status of operation.
 */
 
-uint8_t close_file(uint8_t fileHandle)
+uint8_t close_file(uint8_t* fileHandle)
 {
     FRESULT fileStatus = FR_OK;
-    if (fileHandle >= MAX_OPEN_FILES)
+    if (*fileHandle >= MAX_OPEN_FILES)
     {
         fileStatus = FR_INVALID_OBJECT;
     }
-    else if (! valid_file_handle(fileHandle))
+    else if (! valid_file_handle(*fileHandle))
     {
         fileStatus = FR_INVALID_OBJECT;
     }
     else
     {
 /* Close the file and delete the handle. */
-        fileInfo[fileHandle].fname[0] = 0;
-        delete_file_handle(fileHandle);
-        fileStatus = f_close(&file[fileHandle]);
+        fileInfo[*fileHandle].fname[0] = 0;
+        delete_file_handle(*fileHandle);
+        fileStatus = f_close(&file[*fileHandle]);
+        *fileHandle = 0xFF;
     }
     return fileStatus;
 }
@@ -508,4 +510,92 @@ static void delete_file_handle(uint8_t fileHandle)
         filemap &= ~(1 << fileHandle);
 }
 
+/*--------------------------------------------------------------------------*/
+/** @brief Record a Data Record with One Integer Parameter
+
+The data is recorded to an opened write file.
+
+@param[in] char* ident: an identifier string.
+@param[in] int32_t param1: first parameter.
+@param[in] uint8_t* writeFileHandle: File handle for an open writeable file.
+@returns uint8_t file status.
+*/
+
+uint8_t recordSingle(char* ident, int32_t param1, uint8_t writeFileHandle)
+{
+    uint8_t fileStatus = FR_DENIED;
+    if (isRecording() && (writeFileHandle < 0x7F))
+    {
+        char record[80];
+        stringAppend(record, ident);
+        stringAppend(record, ",");
+        char buffer[20];
+        intToAscii(param1, buffer);
+        stringAppend(record, buffer);
+        stringAppend(record, "\r\n");
+        uint8_t length = stringLength(record);
+        fileStatus = write_to_file(writeFileHandle, &length, (uint8_t*) record);
+    }
+    return fileStatus;
+}
+
+/*--------------------------------------------------------------------------*/
+/** @brief Record a Data Record with Two Integer Parameters
+
+The data is recorded to an opened write file.
+
+@param[in] char* ident: an identifier string.
+@param[in] int32_t param1: first parameter.
+@param[in] int32_t param2: second parameter.
+@param[in] uint8_t* writeFileHandle: File handle for an open writeable file.
+@returns uint8_t file status.
+*/
+
+uint8_t recordDual(char* ident, int32_t param1, int32_t param2, uint8_t writeFileHandle)
+{
+    uint8_t fileStatus = FR_DENIED;
+    if (isRecording() && (writeFileHandle < 0x7F))
+    {
+        char record[80];
+        stringAppend(record, ident);
+        stringAppend(record, ",");
+        char buffer[20];
+        intToAscii(param1, buffer);
+        stringAppend(record, buffer);
+        stringAppend(record, ",");
+        intToAscii(param2, buffer);
+        stringAppend(record, buffer);
+        stringAppend(record, "\r\n");
+        uint8_t length = stringLength(record);
+        fileStatus = write_to_file(writeFileHandle, &length, (uint8_t*) record);
+    }
+    return fileStatus;
+}
+
+/*--------------------------------------------------------------------------*/
+/** @brief Record a Data Record with a String Parameter
+
+The string is recorded to the opened write file.
+
+@param[in] char* ident: an identifier string.
+@param[in] char* string: string to record.
+@param[in] uint8_t* writeFileHandle: File handle for an open writeable file.
+@returns uint8_t file status.
+*/
+
+uint8_t recordString(char* ident, char* string, uint8_t writeFileHandle)
+{
+    uint8_t fileStatus = FR_DENIED;
+    if (isRecording() && (writeFileHandle < 0x7F))
+    {
+        char record[80];
+        stringAppend(record, ident);
+        stringAppend(record, ",");
+        stringAppend(record, string);
+        stringAppend(record, "\r\n");
+        uint8_t length = stringLength(record);
+        fileStatus = write_to_file(writeFileHandle, &length, (uint8_t*) record);
+    }
+    return fileStatus;
+}
 

@@ -82,7 +82,7 @@ Check port settings against those set in the board.h header.
  #define SPI_BaudRatePrescaler_fast    SPI_CR1_BR_FPCLK_DIV_4
  #define SPI_BaudRatePrescaler_slow    SPI_CR1_BR_FPCLK_DIV_256
 
-#elif defined USE_ET_STAMP_STM32_BMS
+#elif defined USE_ET_STAMP_STM32
 /* GPIO WP and CP not used, B12 is CS, B13 is SCK, B14 is MISO, B15 is MOSI */
  #define CARD_SUPPLY_SWITCHABLE   FALSE
  #define SOCKET_WP_CONNECTED      FALSE /* write-protect socket-switch */

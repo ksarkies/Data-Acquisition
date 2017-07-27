@@ -188,6 +188,7 @@ independent of formats.
 
 void DataAcquisitionRecordGui::onMessageReceived(const QString &response)
 {
+qDebug() << "file" << response;
     QStringList breakdown = response.split(",");
     QString command = breakdown[0].right(1);
 // Error Code

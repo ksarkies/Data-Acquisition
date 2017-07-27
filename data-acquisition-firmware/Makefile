@@ -1,6 +1,7 @@
 # Basic makefile K Sarkies
 
 PROJECT		    = data-acquisition
+VERSION        ?= 2
 PREFIX		    = arm-none-eabi
 CC			    = $(PREFIX)-gcc
 LD			    = $(PREFIX)-gcc
@@ -12,7 +13,7 @@ NM 			    = $(PREFIX)-nm
 MCU             = cortex-m3
 PROC            = STM32F1
 CHIP            = STM32F10x_128k_20k
-BOARD           = ET_STM32F103
+BOARD           = ET_STAMP_STM32
 F_XTAL          = 8000000
 SYSCLOCK_CL     = SYSCLK_FREQ_72MHz=72000000
 
@@ -30,6 +31,7 @@ INCLUDES	    = $(patsubst %,-I%,$(DRIVERS_INC) $(FATFSDIR) $(LIBS_DIR))
 CDEFS           += -DHSE_VALUE=$(F_XTAL)UL
 CDEFS           += -D$(SYSCLOCK_CL)
 CDEFS           += -DUSE_$(BOARD)
+CDEFS           += -DVERSION=$(VERSION)
 
 CFLAGS	        += -Os -g -Wall -Wextra -Wno-unused-variable -I. $(INCLUDES) \
                     -fno-common -mthumb -MD

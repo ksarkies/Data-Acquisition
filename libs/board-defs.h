@@ -35,17 +35,35 @@ Initial 19 December 2016
 
 #if defined USE_ET_STM32F103
 
-#define ADC_CHANNEL_0    0
-#define ADC_CHANNEL_1    1
-#define ADC_CHANNEL_2    2
-#define ADC_CHANNEL_3    3
+#define ADC_CHANNEL_0            0
+#define ADC_CHANNEL_1            1
+#define ADC_CHANNEL_2            2
+#define ADC_CHANNEL_3            3
+#define ADC_CHANNEL_4           10
+#define ADC_CHANNEL_5           11
+#define ADC_CHANNEL_6            4
+#define ADC_CHANNEL_7            5
+#define ADC_CHANNEL_8           12
+#define ADC_CHANNEL_9           13
+#define ADC_CHANNEL_10          14
+#define ADC_CHANNEL_11          15
+#define ADC_CHANNEL_TEMPERATURE  6
 
 #elif defined USE_ET_STAMP_STM32
 
-#define ADC_CHANNEL_0    0
-#define ADC_CHANNEL_1    1
-#define ADC_CHANNEL_2    2
-#define ADC_CHANNEL_3    3
+#define ADC_CHANNEL_0            0
+#define ADC_CHANNEL_1            1
+#define ADC_CHANNEL_2            2
+#define ADC_CHANNEL_3            3
+#define ADC_CHANNEL_4            4
+#define ADC_CHANNEL_5            5
+#define ADC_CHANNEL_6            6
+#define ADC_CHANNEL_7            7
+#define ADC_CHANNEL_8           10
+#define ADC_CHANNEL_9           11
+#define ADC_CHANNEL_10          12
+#define ADC_CHANNEL_11          13
+#define ADC_CHANNEL_TEMPERATURE 14
 
 #else
 #error "unsupported board"
@@ -56,28 +74,23 @@ Initial 19 December 2016
 
 #if defined USE_ET_STM32F103
 
-//#define PA_ANALOGUE_INPUTS        GPIO0  | GPIO1  | GPIO2  | GPIO3
-//#define PA_DIGITAL_OUTPUTS        GPIO11
-//#define PB_DIGITAL_OUTPUTS        GPIO0  | GPIO3  | GPIO6  | GPIO8  | GPIO9 |\
-                                             GPIO10 | GPIO11 | GPIO12 | GPIO13
-//#define PB_DIGITAL_INPUTS         GPIO1  | GPIO2  | GPIO4  | GPIO5  |\
-                                             GPIO14 | GPIO15
-//#define PC_ANALOGUE_INPUTS        GPIO0  | GPIO1  | GPIO2  | GPIO3  | GPIO4
-//#define PC_DIGITAL_INPUTS         GPIO7  | GPIO9  | GPIO10 | GPIO12 | GPIO13
+#define PB_DIGITAL_OUTPUTS          GPIO8  | GPIO9 | GPIO10 | GPIO11 |\
+                                    GPIO12 | GPIO13 | GPIO14 | GPIO15
 
 #elif defined USE_ET_STAMP_STM32
 
-//#define PA_ANALOGUE_INPUTS        GPIO0  | GPIO1  | GPIO2  | GPIO3  | GPIO4 |\
-                                             GPIO5  | GPIO6  | GPIO7
-//#define PA_DIGITAL_INPUTS         GPIO11 | GPIO12
-//#define PA_DIGITAL_OUTPUTS        GPIO8  | GPIO13 | GPIO14 | GPIO15
-//#define PC_ANALOGUE_INPUTS        GPIO0  | GPIO1  | GPIO2  | GPIO3  | GPIO4
-//#define PC_DIGITAL_OUTPUTS        GPIO5  | GPIO6  | GPIO7  | GPIO8  | GPIO9 |\
-                                             GPIO10 | GPIO11 | GPIO12 |\
-                                             GPIO13
-//#define PB_DIGITAL_INPUTS         GPIO0  | GPIO1  | GPIO2  | GPIO3  | GPIO4 |\
-                                             GPIO5  | GPIO6  | GPIO7  | GPIO8 |\
-                                             GPIO9  | GPIO10 | GPIO11
+#define PA_ANALOGUE_INPUTS          GPIO0 | GPIO1 | GPIO2 | GPIO3 | GPIO4 |\
+                                            GPIO5 | GPIO6 | GPIO7
+#define PA_DIGITAL_INPUTS           GPIO11 | GPIO12
+#define PA_DIGITAL_OUTPUTS          GPIO8 | GPIO13 | GPIO14 | GPIO15
+#define PB_DIGITAL_INPUTS           GPIO0 | GPIO1 | GPIO2 | GPIO3 | GPIO4 |\
+                                            GPIO5 | GPIO6 | GPIO7 | GPIO8 |\
+                                            GPIO9 | GPIO10 | GPIO11
+#define PC_ANALOGUE_INPUTS          GPIO0 | GPIO1 | GPIO2 | GPIO3 | GPIO4
+#define PC_DIGITAL_OUTPUTS          GPIO5 | GPIO6 | GPIO7 | GPIO8 | GPIO9 |\
+                                            GPIO10 | GPIO11 | GPIO12 |\
+                                            GPIO13
+
 #else
 #error "unsupported board"
 #endif

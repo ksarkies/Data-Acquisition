@@ -32,7 +32,7 @@ K. Sarkies, 10 December 2016
 /* Prototypes */
 /*--------------------------------------------------------------------------*/
 
-uint8_t init_file(void);
+uint8_t init_file_system(void);
 uint8_t make_filesystem(void);
 uint8_t get_free_clusters(uint32_t* freeClusters, uint32_t* clusterSize);
 uint8_t read_directory_entry(char* directoryName, char* type, uint32_t* size,
@@ -43,9 +43,12 @@ uint8_t delete_file(char* fileName);
 uint8_t read_block_from_file(uint8_t fileHandle, uint8_t* blockLength, uint8_t* data);
 uint8_t read_line_from_file(uint8_t fileHandle, char* string);
 uint8_t write_to_file(uint8_t fileHandle, uint8_t* blockLength, uint8_t* data);
-uint8_t close_file(uint8_t fileHandle);
+uint8_t close_file(uint8_t* fileHandle);
 bool valid_file_handle(uint8_t fileHandle);
 void get_file_name(uint8_t fileHandle, char* fileName);
+uint8_t recordSingle(char* ident, int32_t param1, uint8_t writeFileHandle);
+uint8_t recordDual(char* ident, int32_t param1, int32_t param2, uint8_t writeFileHandle);
+uint8_t recordString(char* ident, char* string, uint8_t writeFileHandle);
 
 #endif
 

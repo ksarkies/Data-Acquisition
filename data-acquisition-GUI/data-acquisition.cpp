@@ -178,6 +178,7 @@ Parse the line and take action on the command received.
 
 void DataAcquisitionGui::processResponse(const QString response)
 {
+qDebug() << response;
     QStringList breakdown = response.split(",");
     int size = breakdown.size();
     QString firstField;
@@ -197,7 +198,7 @@ alive. Also check for calibration as time messages stop during this process. */
     {
         if (size > 1) DataAcquisitionMainUi.temperature
             ->setText(QString("%1").arg(secondField
-                .toFloat(),0,'f',1).append(QChar(0x00B0)).append("C"));
+                .toFloat()/256,0,'f',1).append(QChar(0x00B0)).append("C"));
     }
 /* Current */
     if ((size > 0) && (firstField == "dI"))
