@@ -188,7 +188,6 @@ independent of formats.
 
 void DataAcquisitionRecordGui::onMessageReceived(const QString &response)
 {
-qDebug() << "file" << response;
     QStringList breakdown = response.split(",");
     QString command = breakdown[0].right(1);
 // Error Code
@@ -254,6 +253,7 @@ the previous entry has been fully received.
             for (int i=1; i<breakdown.size(); i++)
             {
                 QChar type = breakdown[i][0];
+                if (type == 'e') break;
                 bool ok;
                 QString fileSize = QString("%1")
                     .arg((float)breakdown[i].mid(1,8).toInt(&ok,16)/1000000,8,'f',3);
@@ -403,7 +403,7 @@ void DataAcquisitionRecordGui::on_closeButton_clicked()
 
 void DataAcquisitionRecordGui::on_registerButton_clicked()
 {
-    socket->write("fM/\n\r");
+    socket->write("fM\n\r");
     refreshDirectory();
 }
 

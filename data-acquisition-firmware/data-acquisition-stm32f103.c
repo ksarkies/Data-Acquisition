@@ -106,7 +106,9 @@ int main(void)
 
     uint16_t i = 0;
     uint32_t avg[NUM_CHANNEL];
-    uint64_t var[NUM_CHANNEL];
+//    uint64_t var[NUM_CHANNEL];
+    uint32_t current[NUM_INTERFACES];
+    uint64_t voltage[NUM_INTERFACES];
 
     setDelayCount(configData.config.measurementInterval);
 
@@ -138,19 +140,20 @@ int main(void)
             }
             else line[characterPosition++] = character;
         }
+        if (getDelayCount() > 0xFFFFFF) setDelayCount(configData.config.measurementInterval);
 
 /* -------- Measurements --------- */
         if (getDelayCount() == 0)
         {
-            setDelayCount(configData.config.measurementInterval);
+
 /* Clear stats and setup array of selected channels for conversion */
             uint8_t i = 0;
 	        for (i = 0; i < NUM_CHANNEL; i++)
 	        {
                 avg[i] = 0;
-                var[i] = 0;
+//                var[i] = 0;
 	        }
-/* Run a number of samples and average */
+/* Run a burst of samples and average */
             uint8_t sample = 0;
             uint8_t numSamples = configData.config.numberSamples;
             if (numSamples < 1) numSamples = 1;
@@ -162,11 +165,19 @@ int main(void)
 	            for (i = 0; i < NUM_CHANNEL; i++)
 	            {
                     avg[i] += adcValue(i);
-                    var[i] += avg[i]*avg[i];
+//                    var[i] += avg[i]*avg[i];
 	            }
             }
             int16_t temperature = ((avg[12]/numSamples-TEMPERATURE_OFFSET)
                                         *TEMPERATURE_SCALE)/4096;
+            uint8_t numInterfaces = configData.config.numberConversions-1;
+            if (numInterfaces > NUM_INTERFACES) numInterfaces = NUM_INTERFACES;
+            for (i=0; i < numInterfaces; i++)
+            {
+                uint8_t k = i+i;
+                current[i] = ((avg[k]/numSamples-CURRENT_OFFSET)*CURRENT_SCALE)/4096;
+                voltage[i] = (avg[k+1]/numSamples*VOLTAGE_SCALE+VOLTAGE_OFFSET)/4096;
+            }
 /* ------------- Transmit and save to file -----------*/
 /* Send out a time string */
             char timeString[20];
@@ -177,6 +188,16 @@ int main(void)
             sendResponse("dT",temperature);
             recordSingle("dT",temperature,writeFileHandle);
 /* Send off accumulated data */
+            char id[4];
+            id[0] = 'd';
+            id[1] = 'B';
+            id[3] = 0;
+            for (i=0; i < numInterfaces; i++)
+            {
+                id[2] = '1'+i;
+                dataMessageSend(id, current[i], voltage[i]);
+                recordDual(id, current[i], voltage[i], writeFileHandle);
+            }
         }
 	}
 

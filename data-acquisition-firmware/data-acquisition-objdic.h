@@ -80,7 +80,7 @@ times 256 times 4096 */
 
 #define VOLTAGE_SCALE 1418
 
-//#warning "Version 3 Selected"
+#warning "Version 3 Selected"
 
 #else
 #error "Version is not defined"

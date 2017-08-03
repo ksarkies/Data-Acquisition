@@ -527,6 +527,7 @@ uint8_t recordSingle(char* ident, int32_t param1, uint8_t writeFileHandle)
     if (isRecording() && (writeFileHandle < 0x7F))
     {
         char record[80];
+        stringClear(record);
         stringAppend(record, ident);
         stringAppend(record, ",");
         char buffer[20];
@@ -557,6 +558,7 @@ uint8_t recordDual(char* ident, int32_t param1, int32_t param2, uint8_t writeFil
     if (isRecording() && (writeFileHandle < 0x7F))
     {
         char record[80];
+        stringClear(record);
         stringAppend(record, ident);
         stringAppend(record, ",");
         char buffer[20];
@@ -589,6 +591,7 @@ uint8_t recordString(char* ident, char* string, uint8_t writeFileHandle)
     if (isRecording() && (writeFileHandle < 0x7F))
     {
         char record[80];
+        stringClear(record);
         stringAppend(record, ident);
         stringAppend(record, ",");
         stringAppend(record, string);

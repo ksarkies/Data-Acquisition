@@ -34,7 +34,8 @@ K. Sarkies, 24 November 2016
 #define BUFFER_SIZE 128
 
 /* Number of A/D converters available. */
-#define NUM_CHANNEL 13
+#define NUM_INTERFACES 6
+#define NUM_CHANNEL 1 + 2*NUM_INTERFACES
 
 /* 72MHz clock rate divided by 8 and 1000 to set 1 ms count period for systick */
 #define MS_COUNT    9000

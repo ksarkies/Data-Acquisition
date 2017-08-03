@@ -1,7 +1,7 @@
 # Basic makefile K Sarkies
 
 PROJECT		    = data-acquisition
-VERSION        ?= 2
+VERSION        ?= 3
 PREFIX		    = arm-none-eabi
 CC			    = $(PREFIX)-gcc
 LD			    = $(PREFIX)-gcc

@@ -413,4 +413,15 @@ uint16_t stringEqual(char* string1,char* string2)
     return 1;
 }
 
+/*--------------------------------------------------------------------------*/
+/** @brief Clear String
+
+@param[in] string: char* string
+*/
+
+void stringClear(char* string)
+{
+    string[0] = 0;
+}
+
 

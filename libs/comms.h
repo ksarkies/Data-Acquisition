@@ -50,6 +50,7 @@ void stringAppend(char* string, char* appendage);
 void stringCopy(char* string, char* original);
 uint16_t stringLength(char* string);
 uint16_t stringEqual(char* string1, char* string2);
+void stringClear(char* string);
 
 #endif 
 

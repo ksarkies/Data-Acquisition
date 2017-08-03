@@ -185,6 +185,8 @@ qDebug() << response;
     firstField = breakdown[0].simplified();
     QString secondField;
     if (size > 1) secondField = breakdown[1].simplified();
+    QString thirdField;
+    if (size > 2) thirdField = breakdown[2].simplified();
     QString current, voltage;
     if (! saveFile.isEmpty()) saveLine(response);
 /* When the time field is received, send back a short message to keep comms
@@ -200,19 +202,19 @@ alive. Also check for calibration as time messages stop during this process. */
             ->setText(QString("%1").arg(secondField
                 .toFloat()/256,0,'f',1).append(QChar(0x00B0)).append("C"));
     }
-/* Current */
-    if ((size > 0) && (firstField == "dI"))
+/* Current and Voltage */
+    if ((size > 0) && (firstField == "dB1"))
     {
-        DataAcquisitionMainUi.current
-            ->setText(QString("%1 mA").arg(secondField
-                .toFloat(),0,'f',0));
-    }
-/* Voltage */
-    if ((size > 0) && (firstField == "dV"))
-    {
+        float voltage = thirdField.toFloat()/256;
         DataAcquisitionMainUi.voltage
-            ->setText(QString("%1 mA").arg(secondField
-                .toFloat(),0,'f',0));
+            ->setText(QString("%1 V").arg(voltage,0,'f',2));
+        float current = secondField.toFloat()/256;  
+        if (current < 1)
+            DataAcquisitionMainUi.current
+                ->setText(QString("%1 mA").arg(current*1000,0,'f',0));
+        else
+            DataAcquisitionMainUi.current
+                ->setText(QString("%1 A").arg(current,0,'f',2));
     }
 
 /* Messages for the File Module start with f */
