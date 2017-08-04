@@ -61,6 +61,7 @@ private slots:
     void on_saveFileButton_clicked();
     void on_closeFileButton_clicked();
     void on_recordingButton_clicked();
+    void on_testButton_clicked();
     void on_configureButton_clicked();
     void closeEvent(QCloseEvent*);
 signals:

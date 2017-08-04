@@ -29,6 +29,7 @@ Here the data stream from the remote is received and saved to a file.
 #include "data-acquisition.h"
 #include "data-acquisition-main.h"
 #include "data-acquisition-record.h"
+#include "data-acquisition-test.h"
 #include "data-acquisition-configure.h"
 #include <QApplication>
 #include <QString>
@@ -206,14 +207,33 @@ alive. Also check for calibration as time messages stop during this process. */
     if ((size > 0) && (firstField == "dB1"))
     {
         float voltage = thirdField.toFloat()/256;
-        DataAcquisitionMainUi.voltage
+        DataAcquisitionMainUi.voltage_1
             ->setText(QString("%1 V").arg(voltage,0,'f',2));
         float current = secondField.toFloat()/256;  
         if (current < 1)
-            DataAcquisitionMainUi.current
+            DataAcquisitionMainUi.current_1
                 ->setText(QString("%1 mA").arg(current*1000,0,'f',0));
+        else if (current > 100)
+            DataAcquisitionMainUi.current_1
+                ->setText(QString("---"));
         else
-            DataAcquisitionMainUi.current
+            DataAcquisitionMainUi.current_1
+                ->setText(QString("%1 A").arg(current,0,'f',2));
+    }
+    if ((size > 0) && (firstField == "dB2"))
+    {
+        float voltage = thirdField.toFloat()/256;
+        DataAcquisitionMainUi.voltage_2
+            ->setText(QString("%1 V").arg(voltage,0,'f',2));
+        float current = secondField.toFloat()/256;  
+        if (current < 1)
+            DataAcquisitionMainUi.current_2
+                ->setText(QString("%1 mA").arg(current*1000,0,'f',0));
+        else if (current > 100)
+            DataAcquisitionMainUi.current_2
+                ->setText(QString("---"));
+        else
+            DataAcquisitionMainUi.current_2
                 ->setText(QString("%1 A").arg(current,0,'f',2));
     }
 
@@ -328,14 +348,26 @@ void DataAcquisitionGui::on_recordingButton_clicked()
 
 void DataAcquisitionGui::on_configureButton_clicked()
 {
-/*
     DataAcquisitionConfigGui* dataAcquisitionConfigForm =
                     new DataAcquisitionConfigGui(port,this);
     dataAcquisitionConfigForm->setAttribute(Qt::WA_DeleteOnClose);
-    connect(this, SIGNAL(configureMessageReceived(const QString&)),
-                    dataAcquisitionConfigForm, SLOT(onMessageReceived(const QString&)));
+//    connect(this, SIGNAL(configureMessageReceived(const QString&)),
+  //                  dataAcquisitionConfigForm, SLOT(onMessageReceived(const QString&)));
     dataAcquisitionConfigForm->exec();
+}
+
+//-----------------------------------------------------------------------------
+/** @brief Call up the Test Window.
+
 */
+
+void DataAcquisitionGui::on_testButton_clicked()
+{
+
+    DataAcquisitionTestGui* dataAcquisitionTestForm =
+                    new DataAcquisitionTestGui(port,this);
+    dataAcquisitionTestForm->setAttribute(Qt::WA_DeleteOnClose);
+    dataAcquisitionTestForm->exec();
 }
 
 /*---------------------------------------------------------------------------*/

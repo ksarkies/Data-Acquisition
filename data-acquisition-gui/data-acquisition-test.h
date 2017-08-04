@@ -1,6 +1,6 @@
-/*          Data Acquisition GUI Configure Window Header
+/*          Data Acquisition GUI Test Window Header
 
-@date 2 January 2017
+@date 4 August 2017
 */
 
 /****************************************************************************
@@ -14,7 +14,7 @@
  *   published by the Free Software Foundation; either version 2 of the     *
  *   License, or (at your option) any later version.                        *
  *                                                                          *
- *   Data Acquisition GUI is distributed in the hope that it will be useful,*
+ *   Data Acquisition GUI is distributed in the hope that it will be useful *
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of         *
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the          *
  *   GNU General Public License for more details.                           *
@@ -25,34 +25,37 @@
  *   51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA.              *
  ***************************************************************************/
 
-#ifndef DATA_ACQUISITION_CONFIGURE_H
-#define DATA_ACQUISITION_CONFIGURE_H
+#ifndef DATA_ACQUISITION_TEST_H
+#define DATA_ACQUISITION_TEST_H
 
 #include "data-acquisition.h"
-#include "ui_data-acquisition-configure.h"
+#include "ui_data-acquisition-test.h"
 #include <QDialog>
 #include <QSerialPort>
 #include <QSerialPortInfo>
 
 //-----------------------------------------------------------------------------
-/** @brief Data Acquisition Configure Window.
+/** @brief Data Acquisition Test Window.
 
 */
 
-class DataAcquisitionConfigGui : public QDialog
+class DataAcquisitionTestGui : public QDialog
 {
     Q_OBJECT
 public:
-    DataAcquisitionConfigGui(QSerialPort*, QWidget* parent = 0);
-    ~DataAcquisitionConfigGui();
-    QString error();
+    DataAcquisitionTestGui(QSerialPort* socket, QWidget* parent = 0);
+    ~DataAcquisitionTestGui();
 private slots:
     void on_startButton_clicked();
     void on_stopButton_clicked();
     void on_closeButton_clicked();
+    void on_manualButton_clicked();
+    void on_timerButton_clicked();
+    void on_voltageButton_clicked();
 private:
 // User Interface object instance
-    Ui::DataAcquisitionConfigDialog DataAcquisitionConfigUi;
-    QSerialPort *socket;           //!< Serial port object pointer
+    Ui::DataAcquisitionTestDialog DataAcquisitionTestUi;
+    QSerialPort* socket;
 };
+
 #endif
