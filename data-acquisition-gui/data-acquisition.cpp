@@ -243,7 +243,7 @@ alive. Also check for calibration as time messages stop during this process. */
         emit this->recordMessageReceived(response);
     }
 /* Messages for the Configure Module start with p or certain of the data responses */
-    if ((size > 0) && (firstField.left(1) == "p"))
+    if ((size > 0) && ((firstField.left(1) == "p") || (firstField.left(2) == "dE")))
     {
         emit this->configureMessageReceived(response);
     }
@@ -351,8 +351,8 @@ void DataAcquisitionGui::on_configureButton_clicked()
     DataAcquisitionConfigGui* dataAcquisitionConfigForm =
                     new DataAcquisitionConfigGui(port,this);
     dataAcquisitionConfigForm->setAttribute(Qt::WA_DeleteOnClose);
-//    connect(this, SIGNAL(configureMessageReceived(const QString&)),
-  //                  dataAcquisitionConfigForm, SLOT(onMessageReceived(const QString&)));
+    connect(this, SIGNAL(configureMessageReceived(const QString&)),
+                    dataAcquisitionConfigForm, SLOT(onMessageReceived(const QString&)));
     dataAcquisitionConfigForm->exec();
 }
 

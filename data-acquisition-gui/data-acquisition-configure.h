@@ -47,12 +47,17 @@ public:
     ~DataAcquisitionConfigGui();
     QString error();
 private slots:
-    void on_startButton_clicked();
-    void on_stopButton_clicked();
     void on_closeButton_clicked();
+    void on_timeSetButton_clicked();
+    void on_debugMessageCheckbox_clicked();
+    void on_dataMessageCheckbox_clicked();
+    void on_echoTestButton_clicked();
+    void onMessageReceived(const QString &text);
+    void displayErrorMessage(const QString message);
 private:
 // User Interface object instance
     Ui::DataAcquisitionConfigDialog DataAcquisitionConfigUi;
     QSerialPort *socket;           //!< Serial port object pointer
+    QString errorMessage;
 };
 #endif
