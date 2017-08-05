@@ -56,8 +56,7 @@ Initial 23 November 2016
 #include "../libs/comms.h"
 #include "../libs/file.h"
 #include "../libs/timelib.h"
-#include "../libs/board-defs.h"
-#include "data-acquisition-stm32f103.h"
+#include "data-acquisition.h"
 #include "data-acquisition-objdic.h"
 
 #include <stdbool.h>

@@ -1,10 +1,16 @@
-/*  Defines necessary to specify the processor and board used.
+/* Hardware Access functions.
 
-K. Sarkies, 24 November 2016
+Defines necessary to specify the processor and board used.
+
+This file provides a means to access functions specific to particular underlying
+processor and hardware. The functions are intended to be general in form but
+refer to more specific functions provided elsewhere.
+
+K. Sarkies, 5 August 2017
 */
 
 /*
- * Copyright (C) K. Sarkies <ksarkies@internode.on.net>
+ * Copyright (C) 2017 K. Sarkies <ksarkies@internode.on.net>
  *
  * This project is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,24 +31,15 @@ K. Sarkies, 24 November 2016
 
 #include <stdint.h>
 
+#if (BOARD==BMS)
+#include "hardware-bms.h"
+
+#else
+#error "unsupported hardware"
+#endif
+
 #define HIGH        1
 #define LOW         0
-
-#define RTC_SOURCE RTC
-
-/* Size of communications receive and transmit buffers. */
-#define BUFFER_SIZE 128
-
-/* Number of A/D converters available. */
-#define NUM_INTERFACES 6
-#define NUM_CHANNEL 1 + 2*NUM_INTERFACES
-
-/* 72MHz clock rate divided by 8 and 1000 to set 1 ms count period for systick */
-#define MS_COUNT    9000
-
-/* Flash. Largest page size compatible with most families used.
-(note only STM32F1xx,  STM32F05x have compatible memory organization). */
-#define FLASH_PAGE_SIZE 2048
 
 /*--------------------------------------------------------------------------*/
 /* Prototypes */
