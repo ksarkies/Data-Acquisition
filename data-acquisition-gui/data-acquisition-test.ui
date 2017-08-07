@@ -13,14 +13,20 @@
   <property name="windowTitle">
    <string>Data Acquisition Test Control</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">background-color:white;</string>
+  </property>
   <widget class="QPushButton" name="closeButton">
    <property name="geometry">
     <rect>
-     <x>585</x>
-     <y>440</y>
+     <x>584</x>
+     <y>476</y>
      <width>91</width>
      <height>27</height>
     </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color:lightpink;</string>
    </property>
    <property name="text">
     <string>Close</string>
@@ -34,6 +40,9 @@
      <width>91</width>
      <height>116</height>
     </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color:lightgreen;</string>
    </property>
    <property name="title">
     <string>Load Test</string>
@@ -102,6 +111,9 @@
    <property name="toolTip">
     <string>Set the switches to connect loads and sources to the DUT.</string>
    </property>
+   <property name="styleSheet">
+    <string notr="true">background-color:lightpink;</string>
+   </property>
    <property name="text">
     <string>Start</string>
    </property>
@@ -117,6 +129,9 @@
    </property>
    <property name="toolTip">
     <string>Stop the experiment manually at any time.</string>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color:lightpink;</string>
    </property>
    <property name="text">
     <string>Stop</string>
@@ -167,132 +182,6 @@
     <string>Minimum Voltage</string>
    </property>
   </widget>
-  <widget class="QCheckBox" name="deviceCheckBox_1">
-   <property name="geometry">
-    <rect>
-     <x>40</x>
-     <y>372</y>
-     <width>41</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>1</string>
-   </property>
-   <property name="checked">
-    <bool>false</bool>
-   </property>
-  </widget>
-  <widget class="QCheckBox" name="deviceCheckBox_2">
-   <property name="geometry">
-    <rect>
-     <x>40</x>
-     <y>396</y>
-     <width>41</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>2</string>
-   </property>
-   <property name="checked">
-    <bool>true</bool>
-   </property>
-  </widget>
-  <widget class="QCheckBox" name="deviceCheckBox_3">
-   <property name="geometry">
-    <rect>
-     <x>40</x>
-     <y>420</y>
-     <width>33</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>3</string>
-   </property>
-  </widget>
-  <widget class="QCheckBox" name="loadCheckBox_1">
-   <property name="geometry">
-    <rect>
-     <x>100</x>
-     <y>384</y>
-     <width>41</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>L1</string>
-   </property>
-   <property name="checked">
-    <bool>true</bool>
-   </property>
-  </widget>
-  <widget class="QCheckBox" name="loadCheckBox_2">
-   <property name="geometry">
-    <rect>
-     <x>100</x>
-     <y>408</y>
-     <width>41</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>L2</string>
-   </property>
-  </widget>
-  <widget class="QCheckBox" name="sourceCheckBox">
-   <property name="geometry">
-    <rect>
-     <x>156</x>
-     <y>396</y>
-     <width>37</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>S</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="deviceLabel">
-   <property name="geometry">
-    <rect>
-     <x>36</x>
-     <y>448</y>
-     <width>37</width>
-     <height>17</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>DUT</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="sourceLabel">
-   <property name="geometry">
-    <rect>
-     <x>148</x>
-     <y>448</y>
-     <width>49</width>
-     <height>17</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Source</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="loadLabel">
-   <property name="geometry">
-    <rect>
-     <x>96</x>
-     <y>448</y>
-     <width>37</width>
-     <height>17</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Load</string>
-   </property>
-  </widget>
   <widget class="QDoubleSpinBox" name="voltageSpinBox">
    <property name="geometry">
     <rect>
@@ -303,7 +192,7 @@
     </rect>
    </property>
    <property name="minimum">
-    <double>10.500000000000000</double>
+    <double>11.000000000000000</double>
    </property>
    <property name="maximum">
     <double>16.000000000000000</double>

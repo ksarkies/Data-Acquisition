@@ -43,13 +43,15 @@ This window provides configuration and controls for a number of tests.
 //-----------------------------------------------------------------------------
 /** Test Window GUI Constructor
 
-@param[in] socket TCP Socket object pointer
+@param[in] socket: TCP Socket object pointer
+@param[in] setting: interfaces that are active. 
 @param[in] parent Parent widget.
 */
 
-DataAcquisitionTestGui::DataAcquisitionTestGui(QSerialPort* p, QWidget* parent)
-                                                    : QDialog(parent)
+DataAcquisitionTestGui::DataAcquisitionTestGui(QSerialPort* p, int setting,
+                                               QWidget* parent) : QDialog(parent)
 {
+    interfaces = setting;
     socket = p;
     DataAcquisitionTestUi.setupUi(this);
     on_manualButton_clicked();
@@ -105,37 +107,39 @@ void DataAcquisitionTestGui::on_voltageButton_clicked()
 //-----------------------------------------------------------------------------
 /** @brief Start Test.
 
-Connect loads and sources to devices under test according to the settings in
-the checkboxes.
+Connect loads and sources to devices under test according to the settings passed
+from the calling program.
 */
 
 void DataAcquisitionTestGui::on_startButton_clicked()
 {
-    if (DataAcquisitionTestUi.loadCheckBox_1->isChecked())
+    DataAcquisitionTestUi.startButton->
+        setStyleSheet("background-color:lightgreen;");
+    if (interfaces & (1 << 3))
     {
-        if (DataAcquisitionTestUi.deviceCheckBox_1->isChecked())
+        if (interfaces & (1 << 0))
             socket->write("aS11\n\r");
-        if (DataAcquisitionTestUi.deviceCheckBox_2->isChecked())
+        if (interfaces & (1 << 1))
             socket->write("aS21\n\r");
-        if (DataAcquisitionTestUi.deviceCheckBox_3->isChecked())
+        if (interfaces & (1 << 2))
             socket->write("aS31\n\r");
     }
-    if (DataAcquisitionTestUi.loadCheckBox_2->isChecked())
+    if (interfaces & (1 << 4))
     {
-        if (DataAcquisitionTestUi.deviceCheckBox_1->isChecked())
+        if (interfaces & (1 << 0))
             socket->write("aS12\n\r");
-        if (DataAcquisitionTestUi.deviceCheckBox_2->isChecked())
+        if (interfaces & (1 << 1))
             socket->write("aS22\n\r");
-        if (DataAcquisitionTestUi.deviceCheckBox_3->isChecked())
+        if (interfaces & (1 << 2))
             socket->write("aS32\n\r");
     }
-    if (DataAcquisitionTestUi.sourceCheckBox->isChecked())
+    if (interfaces & (1 << 5))
     {
-        if (DataAcquisitionTestUi.deviceCheckBox_1->isChecked())
+        if (interfaces & (1 << 0))
             socket->write("aS13\n\r");
-        if (DataAcquisitionTestUi.deviceCheckBox_2->isChecked())
+        if (interfaces & (1 << 1))
             socket->write("aS23\n\r");
-        if (DataAcquisitionTestUi.deviceCheckBox_3->isChecked())
+        if (interfaces & (1 << 2))
             socket->write("aS33\n\r");
     }
 }
@@ -148,6 +152,8 @@ Disconnect all loads and sources.
 
 void DataAcquisitionTestGui::on_stopButton_clicked()
 {
+    DataAcquisitionTestUi.startButton->
+        setStyleSheet("background-color:lightpink;");
     socket->write("aS01\n\r");
     socket->write("aS02\n\r");
     socket->write("aS03\n\r");

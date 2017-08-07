@@ -67,6 +67,12 @@ void rtc_setup(void);
 void usart1_setup(void);
 void peripheral_enable(void);
 void peripheral_disable(void);
+void setSwitch(uint8_t device, uint8_t setting);
+uint8_t getSwitchControlBits(void);
+void setSwitchControlBits(uint8_t settings);
+void overCurrentReset(uint32_t interface);
+void overCurrentRelease(uint32_t interface);
+uint32_t getMillisecondsCount(void);
 
 #endif
 

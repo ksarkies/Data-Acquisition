@@ -43,7 +43,7 @@ class DataAcquisitionTestGui : public QDialog
 {
     Q_OBJECT
 public:
-    DataAcquisitionTestGui(QSerialPort* socket, QWidget* parent = 0);
+    DataAcquisitionTestGui(QSerialPort* socket, int setting, QWidget* parent = 0);
     ~DataAcquisitionTestGui();
 private slots:
     void on_startButton_clicked();
@@ -54,6 +54,7 @@ private slots:
     void on_voltageButton_clicked();
 private:
 // User Interface object instance
+    int interfaces;
     Ui::DataAcquisitionTestDialog DataAcquisitionTestUi;
     QSerialPort* socket;
 };

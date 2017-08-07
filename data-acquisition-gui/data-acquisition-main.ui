@@ -137,6 +137,9 @@
    <property name="toolTip">
     <string>Connect to the TCP address and port as configured</string>
    </property>
+   <property name="styleSheet">
+    <string notr="true">background-color:lightpink;</string>
+   </property>
    <property name="text">
     <string>Connect</string>
    </property>
@@ -213,8 +216,8 @@
   <widget class="QLabel" name="voltageLabel">
    <property name="geometry">
     <rect>
-     <x>230</x>
-     <y>130</y>
+     <x>202</x>
+     <y>126</y>
      <width>56</width>
      <height>17</height>
     </rect>
@@ -226,8 +229,8 @@
   <widget class="QLabel" name="voltage_1">
    <property name="geometry">
     <rect>
-     <x>191</x>
-     <y>149</y>
+     <x>163</x>
+     <y>145</y>
      <width>125</width>
      <height>50</height>
     </rect>
@@ -262,8 +265,8 @@
   <widget class="QLabel" name="current_1">
    <property name="geometry">
     <rect>
-     <x>372</x>
-     <y>149</y>
+     <x>387</x>
+     <y>145</y>
      <width>125</width>
      <height>50</height>
     </rect>
@@ -298,8 +301,8 @@
   <widget class="QLabel" name="currentLabel">
    <property name="geometry">
     <rect>
-     <x>410</x>
-     <y>130</y>
+     <x>425</x>
+     <y>126</y>
      <width>56</width>
      <height>17</height>
     </rect>
@@ -311,8 +314,8 @@
   <widget class="QLabel" name="voltage_2">
    <property name="geometry">
     <rect>
-     <x>189</x>
-     <y>215</y>
+     <x>161</x>
+     <y>211</y>
      <width>125</width>
      <height>50</height>
     </rect>
@@ -347,8 +350,8 @@
   <widget class="QLabel" name="current_2">
    <property name="geometry">
     <rect>
-     <x>370</x>
-     <y>215</y>
+     <x>385</x>
+     <y>211</y>
      <width>125</width>
      <height>50</height>
     </rect>
@@ -383,8 +386,8 @@
   <widget class="QLabel" name="voltage_3">
    <property name="geometry">
     <rect>
-     <x>189</x>
-     <y>280</y>
+     <x>161</x>
+     <y>276</y>
      <width>125</width>
      <height>50</height>
     </rect>
@@ -419,8 +422,8 @@
   <widget class="QLabel" name="current_3">
    <property name="geometry">
     <rect>
-     <x>370</x>
-     <y>280</y>
+     <x>385</x>
+     <y>276</y>
      <width>125</width>
      <height>50</height>
     </rect>
@@ -455,8 +458,8 @@
   <widget class="QLabel" name="voltage_4">
    <property name="geometry">
     <rect>
-     <x>189</x>
-     <y>345</y>
+     <x>161</x>
+     <y>341</y>
      <width>125</width>
      <height>50</height>
     </rect>
@@ -491,8 +494,8 @@
   <widget class="QLabel" name="current_4">
    <property name="geometry">
     <rect>
-     <x>370</x>
-     <y>345</y>
+     <x>385</x>
+     <y>341</y>
      <width>125</width>
      <height>50</height>
     </rect>
@@ -527,8 +530,8 @@
   <widget class="QLabel" name="voltage_5">
    <property name="geometry">
     <rect>
-     <x>189</x>
-     <y>410</y>
+     <x>161</x>
+     <y>406</y>
      <width>125</width>
      <height>50</height>
     </rect>
@@ -563,8 +566,8 @@
   <widget class="QLabel" name="current_5">
    <property name="geometry">
     <rect>
-     <x>370</x>
-     <y>410</y>
+     <x>385</x>
+     <y>406</y>
      <width>125</width>
      <height>50</height>
     </rect>
@@ -599,8 +602,8 @@
   <widget class="QLabel" name="channelLabel_1">
    <property name="geometry">
     <rect>
-     <x>325</x>
-     <y>165</y>
+     <x>324</x>
+     <y>179</y>
      <width>36</width>
      <height>17</height>
     </rect>
@@ -612,8 +615,8 @@
   <widget class="QLabel" name="channelLabel_2">
    <property name="geometry">
     <rect>
-     <x>325</x>
-     <y>230</y>
+     <x>324</x>
+     <y>244</y>
      <width>36</width>
      <height>17</height>
     </rect>
@@ -625,8 +628,8 @@
   <widget class="QLabel" name="channelLabel_3">
    <property name="geometry">
     <rect>
-     <x>325</x>
-     <y>295</y>
+     <x>320</x>
+     <y>308</y>
      <width>36</width>
      <height>17</height>
     </rect>
@@ -638,8 +641,8 @@
   <widget class="QLabel" name="channelLabel_4">
    <property name="geometry">
     <rect>
-     <x>325</x>
-     <y>360</y>
+     <x>320</x>
+     <y>374</y>
      <width>36</width>
      <height>17</height>
     </rect>
@@ -651,14 +654,267 @@
   <widget class="QLabel" name="channelLabel_5">
    <property name="geometry">
     <rect>
-     <x>325</x>
-     <y>420</y>
+     <x>320</x>
+     <y>436</y>
      <width>36</width>
      <height>17</height>
     </rect>
    </property>
    <property name="text">
     <string>Ch 5</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="loadCheckBox_1">
+   <property name="geometry">
+    <rect>
+     <x>327</x>
+     <y>354</y>
+     <width>21</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="loadCheckBox_2">
+   <property name="geometry">
+    <rect>
+     <x>327</x>
+     <y>418</y>
+     <width>21</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="deviceCheckBox_2">
+   <property name="geometry">
+    <rect>
+     <x>327</x>
+     <y>226</y>
+     <width>21</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="sourceCheckBox">
+   <property name="geometry">
+    <rect>
+     <x>327</x>
+     <y>486</y>
+     <width>21</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="deviceCheckBox_3">
+   <property name="geometry">
+    <rect>
+     <x>327</x>
+     <y>289</y>
+     <width>17</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="deviceCheckBox_1">
+   <property name="geometry">
+    <rect>
+     <x>331</x>
+     <y>158</y>
+     <width>25</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="channelLabel_6">
+   <property name="geometry">
+    <rect>
+     <x>319</x>
+     <y>504</y>
+     <width>36</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Ch 6</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="current_6">
+   <property name="geometry">
+    <rect>
+     <x>384</x>
+     <y>472</y>
+     <width>125</width>
+     <height>50</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>18</pointsize>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color:lightblue;</string>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::Box</enum>
+   </property>
+   <property name="frameShadow">
+    <enum>QFrame::Raised</enum>
+   </property>
+   <property name="lineWidth">
+    <number>2</number>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="scaledContents">
+    <bool>true</bool>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="voltage_6">
+   <property name="geometry">
+    <rect>
+     <x>160</x>
+     <y>472</y>
+     <width>125</width>
+     <height>50</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>18</pointsize>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color:lightblue;</string>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::Box</enum>
+   </property>
+   <property name="frameShadow">
+    <enum>QFrame::Raised</enum>
+   </property>
+   <property name="lineWidth">
+    <number>2</number>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="scaledContents">
+    <bool>true</bool>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="channelLabel_7">
+   <property name="geometry">
+    <rect>
+     <x>312</x>
+     <y>144</y>
+     <width>61</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Device 1</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="channelLabel_8">
+   <property name="geometry">
+    <rect>
+     <x>312</x>
+     <y>212</y>
+     <width>61</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Device 2</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="channelLabel_9">
+   <property name="geometry">
+    <rect>
+     <x>312</x>
+     <y>276</y>
+     <width>61</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Device 3</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="channelLabel_10">
+   <property name="geometry">
+    <rect>
+     <x>316</x>
+     <y>472</y>
+     <width>61</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Source</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="channelLabel_11">
+   <property name="geometry">
+    <rect>
+     <x>312</x>
+     <y>340</y>
+     <width>61</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Load 1</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="channelLabel_12">
+   <property name="geometry">
+    <rect>
+     <x>312</x>
+     <y>404</y>
+     <width>61</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Load 2</string>
    </property>
   </widget>
  </widget>

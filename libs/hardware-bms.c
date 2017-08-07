@@ -277,6 +277,150 @@ uint32_t adcValue(uint8_t channel)
 }
 
 /*--------------------------------------------------------------------------*/
+/** @brief Make Switch Settings
+
+The switches are used to connect loads and source to the device under test.
+This is set through the GPIO interface. The load or source specified is
+set either to the device specified, or is disconnected from all devices.
+
+This function provides a common interface if different hardware is used.
+
+@param[in] device: uint8_t (1-3, 0 = none)
+@param[in] setting: uint8_t load (0-1), source 2.
+*/
+
+void setSwitch(uint8_t device, uint8_t setting)
+{
+    uint16_t switchControl = gpio_port_read(SWITCH_CONTROL_PORT);
+    uint16_t switchControlBits = ((switchControl >> SWITCH_CONTROL_SHIFT) & 0x3F);
+/* Each two-bit field represents load 1 bits 0-1, load 2 bits 2-3, source bits
+4-5, and the field represents the device to be connected (no two devices
+can be connected to a load/source at the same time). The final bit pattern of
+settings go into the switch control port, preserving the lower bits. */
+    if ((device <= 3) && (setting <= 2))
+    {
+        switchControlBits &= (~(0x03 << (setting<<1)));
+        switchControlBits |= ((device & 0x03) << (setting<<1));
+        switchControl &= ~(0x3F << SWITCH_CONTROL_SHIFT);
+        gpio_port_write(SWITCH_CONTROL_PORT,
+                    (switchControl | (switchControlBits << SWITCH_CONTROL_SHIFT)));
+    }
+}
+
+/*--------------------------------------------------------------------------*/
+/** @brief Return the Switch Settings
+
+Each two-bit field represents load 1 bits 0-1, load 2 bits 2-3 source bits 4-5,
+and the field represents the device (1-3) to be connected. Device 0 = none
+connected.
+
+@returns uint8_t: the switch settings from the relevant port.
+*/
+
+uint8_t getSwitchControlBits(void)
+{
+    return ((gpio_port_read(SWITCH_CONTROL_PORT) >> SWITCH_CONTROL_SHIFT) & 0x3F);
+}
+
+/*--------------------------------------------------------------------------*/
+/** @brief Set the Interface Reset Line
+
+This activates a reset of the interface for whatever reason that may be needed
+supported. A call to the release function following a time interval is needed
+to complete the interrupt process.
+
+@param[in] interface: uint32_t interface 0-5, being devices 1-3, loads 1-2,
+source.
+*/
+
+void overCurrentReset(uint32_t interface)
+{
+    uint32_t port;
+    uint16_t bit;
+    switch (interface)
+    {
+        case 0:
+            port = RESET_PORT_1;
+            bit = RESET_BIT_1;
+            break;
+        case 1:
+            port = RESET_PORT_2;
+            bit = RESET_BIT_2;
+            break;
+        case 2:
+            port = RESET_PORT_3;
+            bit = RESET_BIT_3;
+            break;
+        case 3:
+            port = RESET_PORT_4;
+            bit = RESET_BIT_4;
+            break;
+        case 4:
+            port = RESET_PORT_5;
+            bit = RESET_BIT_5;
+            break;
+    }
+    if (interface < 6) gpio_set(port,bit);
+}
+
+/*--------------------------------------------------------------------------*/
+/** @brief Release the Interface Reset Line
+
+@param[in] interface: uint32_t interface 0-5, being batteries 1-3, loads 1-2, module.
+*/
+
+void overCurrentRelease(uint32_t interface)
+{
+    uint32_t port;
+    uint16_t bit;
+    switch (interface)
+    {
+        case 0:
+            port = RESET_PORT_1;
+            bit = RESET_BIT_1;
+            break;
+        case 1:
+            port = RESET_PORT_2;
+            bit = RESET_BIT_2;
+            break;
+        case 2:
+            port = RESET_PORT_3;
+            bit = RESET_BIT_3;
+            break;
+        case 3:
+            port = RESET_PORT_4;
+            bit = RESET_BIT_4;
+            break;
+        case 4:
+            port = RESET_PORT_5;
+            bit = RESET_BIT_5;
+            break;
+    }
+    if (interface < 6) gpio_clear(port,bit);
+}
+
+/*--------------------------------------------------------------------------*/
+/** @brief Restore Saved Switch Settings
+
+Each two-bit field represents load 1 bits 0-1, load 2 bits 2-3 source bits 4-5,
+and the field represents the device (1-3) to be connected. Device 0 = none
+connected.
+
+This can be used as a raw switch setting call but is not recommended for normal
+use.
+
+@param[in] settings: uint8_t the switch settings from the relevant port.
+*/
+
+void setSwitchControlBits(uint8_t settings)
+{
+    uint16_t switchControl = gpio_port_read(SWITCH_CONTROL_PORT);
+    switchControl &= ~(0x3F << SWITCH_CONTROL_SHIFT);
+    gpio_port_write(SWITCH_CONTROL_PORT,
+                (switchControl | (settings << SWITCH_CONTROL_SHIFT)));
+}
+
+/*--------------------------------------------------------------------------*/
 /** @brief Clock Enable
 
 The processor system clock is established. */
@@ -619,6 +763,17 @@ void sys_tick_handler(void)
 
 /* down counter for timing. */
     downCount--;
+}
+
+/*--------------------------------------------------------------------------*/
+/* Retrieve Millisecond Counter
+
+@returns uint32_t milliseconds count
+*/
+
+uint32_t getMillisecondsCount(void)
+{
+    return millisecondsCount;
 }
 
 /*--------------------------------------------------------------------------*/

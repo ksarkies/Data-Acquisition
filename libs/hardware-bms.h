@@ -71,12 +71,12 @@ Initial 19 December 2016
 #define ADC_CHANNEL_3            3
 #define ADC_CHANNEL_4            4
 #define ADC_CHANNEL_5            5
-#define ADC_CHANNEL_6            6
-#define ADC_CHANNEL_7            7
-#define ADC_CHANNEL_8           10
-#define ADC_CHANNEL_9           11
-#define ADC_CHANNEL_10          12
-#define ADC_CHANNEL_11          13
+#define ADC_CHANNEL_6           10
+#define ADC_CHANNEL_7           11
+#define ADC_CHANNEL_8           12
+#define ADC_CHANNEL_9           13
+#define ADC_CHANNEL_10           6
+#define ADC_CHANNEL_11           7
 #define ADC_CHANNEL_TEMPERATURE 14
 /* GPIO Port Settings */
 #define PA_ANALOGUE_INPUTS          GPIO0 | GPIO1 | GPIO2 | GPIO3 | GPIO4 |\
@@ -90,6 +90,24 @@ Initial 19 December 2016
 #define PC_DIGITAL_OUTPUTS          GPIO5 | GPIO6 | GPIO7 | GPIO8 | GPIO9 |\
                                             GPIO10 | GPIO11 | GPIO12 |\
                                             GPIO13
+
+/* The switch control code assumes the control pairs are in order */
+#define SWITCH_CONTROL_PORT             GPIOC
+#define SWITCH_CONTROL_SHIFT            6
+
+/* The overcurrent reset ports */
+#define RESET_PORT_1                    GPIOA
+#define RESET_BIT_1                     GPIO13
+#define RESET_PORT_2                    GPIOA
+#define RESET_BIT_2                     GPIO14
+#define RESET_PORT_3                    GPIOA
+#define RESET_BIT_3                     GPIO15
+#define RESET_PORT_4                    GPIOC
+#define RESET_BIT_4                     GPIO12
+#define RESET_PORT_5                    GPIOC
+#define RESET_BIT_5                     GPIO13
+#define RESET_PORT_6                    GPIOC
+#define RESET_BIT_6                     GPIO5
 
 #endif
 

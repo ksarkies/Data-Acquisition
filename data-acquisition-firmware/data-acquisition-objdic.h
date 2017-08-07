@@ -42,6 +42,7 @@ current. Thus the results here are 256 times the current in amperes. */
 
 #define CURRENT_SCALE 8373
 
+/* The voltage amplifier scale versions 1 and 2 are obsolete */
 /* Voltage amplifier has different parameters for different board versions */
 #if (VERSION==1)
 
@@ -69,6 +70,7 @@ times 256 times 4096 */
 
 #warning "Version 2 Selected"
 
+/* This voltage amplifier scale is the latest and only version used */
 #elif (VERSION==3)
 
 /* Voltage offset: 5 (2 times local ref 2.5V) times the gain 1.679
@@ -79,8 +81,6 @@ times 256 times 4096 */
 /* Voltage scale: amplifier gain 1.679 times ref voltage 3.3 times 256 */
 
 #define VOLTAGE_SCALE 1418
-
-#warning "Version 3 Selected"
 
 #else
 #error "Version is not defined"

@@ -63,12 +63,14 @@ Initial 23 November 2016
 
 /* Local Prototypes */
 static void parseCommand(uint8_t* line);
+static void hardwareActions(void);
 
 /* Globals */
 static uint8_t writeFileHandle;
 static uint8_t readFileHandle;
 static char writeFileName[12];
 static char readFileName[12];
+static uint16_t interface;         /* Interface in reset */
 
 /* These configuration variables are part of the Object Dictionary. */
 /* This is defined in power-management-objdic and is updated in response to
@@ -105,8 +107,7 @@ int main(void)
 
     uint16_t i = 0;
     uint32_t avg[NUM_CHANNEL];
-//    uint64_t var[NUM_CHANNEL];
-    uint32_t current[NUM_INTERFACES];
+    int32_t current[NUM_INTERFACES];
     uint64_t voltage[NUM_INTERFACES];
 
     setDelayCount(configData.config.measurementInterval);
@@ -121,6 +122,7 @@ int main(void)
     readFileName[0] = 0;
 
 /* Main event loop */
+    interface = 0;
 	while (1)
 	{
 /* -------- CLI ------------*/
@@ -139,6 +141,7 @@ int main(void)
             }
             else line[characterPosition++] = character;
         }
+        hardwareActions();          /* Check if any actions need to be taken */
         if (getDelayCount() > 0xFFFFFF) setDelayCount(configData.config.measurementInterval);
 
 /* -------- Measurements --------- */
@@ -150,7 +153,6 @@ int main(void)
 	        for (i = 0; i < NUM_CHANNEL; i++)
 	        {
                 avg[i] = 0;
-//                var[i] = 0;
 	        }
 /* Run a burst of samples and average */
             uint8_t sample = 0;
@@ -161,10 +163,9 @@ int main(void)
 /* Start conversion and wait for conversion end. */
 	            adc_start_conversion_regular(ADC1);
                 while (! adcEOC());
-	            for (i = 0; i < NUM_CHANNEL; i++)
+                for (i = 0; i < NUM_CHANNEL; i++)
 	            {
                     avg[i] += adcValue(i);
-//                    var[i] += avg[i]*avg[i];
 	            }
             }
             int16_t temperature = ((avg[12]/numSamples-TEMPERATURE_OFFSET)
@@ -186,7 +187,8 @@ int main(void)
 /* Send out temperature measurement. */
             sendResponse("dT",temperature);
             recordSingle("dT",temperature,writeFileHandle);
-/* Send off accumulated data */
+/* Send off accumulated data as dBx where x is 0-5 for devices 1-3, loads 1-2,
+source. */
             char id[4];
             id[0] = 'd';
             id[1] = 'B';
@@ -197,6 +199,9 @@ int main(void)
                 dataMessageSend(id, current[i], voltage[i]);
                 recordDual(id, current[i], voltage[i], writeFileHandle);
             }
+/* Send out switch status */
+            sendResponse("ds",(int)getSwitchControlBits());
+            recordSingle("ds",(int)getSwitchControlBits(),writeFileHandle);
         }
 	}
 
@@ -225,8 +230,29 @@ Action Commands */
     {
 /**
  */
+/* Snm Manually set switch. Follow by device n (1-3, 0 = none) and
+load m (0-1)/source (2). Each two-bit field represents a load or panel, and the
+setting is the battery to be connected (no two batteries can be connected to a
+load/panel). */
         switch (line[1])
         {
+        case 'S':
+            {
+                uint8_t device = line[2]-'0';
+                uint8_t setting = line[3]-'0'-1;
+                if ((device < 4) && (setting < 4)) setSwitch(device, setting);
+                break;
+            }
+/* Rn Reset an interface. Set a timer to expire after 250ms at which time the
+reset line is released. The command is followed by an interface number n=0-5
+being device 1-3, loads 1-2 and source. */
+        case 'R':
+            {
+                interface = line[2]-'0';
+                if (interface > NUM_INTERFACES-1) break;
+                if (interface > 0) overCurrentReset(interface);
+                break;
+            }
 /* Write the current configuration block to FLASH */
         case 'W':
             {
@@ -477,4 +503,12 @@ and filename, or blank if any file is not open. */
 }
 
 /*--------------------------------------------------------------------------*/
+static void hardwareActions(void)
+{
+    if ((interface > 0) && (getMillisecondsCount() & 0xFF) == 0)
+    {
+        overCurrentRelease(interface);
+        interface = 0;
+    }
+}
 

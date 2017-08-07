@@ -63,7 +63,7 @@ void setGlobalDefaults(void)
     configData.config.recording = false;
 /* Set default measurement variables */
     configData.config.measurementInterval = 1000;   /* 1 second intervals */
-    configData.config.numberConversions = 3;        /* number of interfaces plus temperature */
+    configData.config.numberConversions = 6;        /* number of interfaces plus temperature */
     configData.config.numberSamples = 16;           /* burst of samples for averaging */
 }
 

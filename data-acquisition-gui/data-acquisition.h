@@ -78,6 +78,7 @@ private:
     void displayErrorMessage(const QString message);
     void saveLine(QString line);    // Save line to a file
     void ssleep(int seconds);
+    int activeInterfaces(void);
 // Variables
     QString serialDevice;
     uint baudrate;

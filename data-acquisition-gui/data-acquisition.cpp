@@ -188,7 +188,6 @@ qDebug() << response;
     if (size > 1) secondField = breakdown[1].simplified();
     QString thirdField;
     if (size > 2) thirdField = breakdown[2].simplified();
-    QString current, voltage;
     if (! saveFile.isEmpty()) saveLine(response);
 /* When the time field is received, send back a short message to keep comms
 alive. Also check for calibration as time messages stop during this process. */
@@ -203,38 +202,136 @@ alive. Also check for calibration as time messages stop during this process. */
             ->setText(QString("%1").arg(secondField
                 .toFloat()/256,0,'f',1).append(QChar(0x00B0)).append("C"));
     }
-/* Current and Voltage */
+/* Currents and Voltages */
+    float voltage = thirdField.toFloat()/256;
+    float current = secondField.toFloat();
+    if (current > 0x7FFFF) current -= 0xFFFFF;
+    current /= 256;
     if ((size > 0) && (firstField == "dB1"))
     {
-        float voltage = thirdField.toFloat()/256;
-        DataAcquisitionMainUi.voltage_1
-            ->setText(QString("%1 V").arg(voltage,0,'f',2));
-        float current = secondField.toFloat()/256;  
-        if (current < 1)
-            DataAcquisitionMainUi.current_1
-                ->setText(QString("%1 mA").arg(current*1000,0,'f',0));
-        else if (current > 100)
-            DataAcquisitionMainUi.current_1
-                ->setText(QString("---"));
+        if (activeInterfaces() & (1 << 0))
+        {
+            DataAcquisitionMainUi.voltage_1
+                ->setText(QString("%1 V").arg(voltage,0,'f',2));
+            if (abs(current) < 1)
+                DataAcquisitionMainUi.current_1
+                    ->setText(QString("%1 mA").arg(current*1000,0,'f',0));
+            else
+                DataAcquisitionMainUi.current_1
+                    ->setText(QString("%1 A").arg(current,0,'f',2));
+        }
         else
+        {
+            DataAcquisitionMainUi.voltage_1
+                ->setText(QString(""));
             DataAcquisitionMainUi.current_1
-                ->setText(QString("%1 A").arg(current,0,'f',2));
+                ->setText(QString(""));
+        }
     }
     if ((size > 0) && (firstField == "dB2"))
     {
-        float voltage = thirdField.toFloat()/256;
-        DataAcquisitionMainUi.voltage_2
-            ->setText(QString("%1 V").arg(voltage,0,'f',2));
-        float current = secondField.toFloat()/256;  
-        if (current < 1)
-            DataAcquisitionMainUi.current_2
-                ->setText(QString("%1 mA").arg(current*1000,0,'f',0));
-        else if (current > 100)
-            DataAcquisitionMainUi.current_2
-                ->setText(QString("---"));
+        if (activeInterfaces() & (1 << 1))
+        {
+            DataAcquisitionMainUi.voltage_2
+                ->setText(QString("%1 V").arg(voltage,0,'f',2));
+            if (abs(current) < 1)
+                DataAcquisitionMainUi.current_2
+                    ->setText(QString("%1 mA").arg(current*1000,0,'f',0));
+            else
+                DataAcquisitionMainUi.current_2
+                    ->setText(QString("%1 A").arg(current,0,'f',2));
+        }
         else
+        {
+            DataAcquisitionMainUi.voltage_2
+                ->setText(QString(""));
             DataAcquisitionMainUi.current_2
-                ->setText(QString("%1 A").arg(current,0,'f',2));
+                ->setText(QString(""));
+        }
+    }
+    if ((size > 0) && (firstField == "dB3"))
+    {
+        if (activeInterfaces() & (1 << 2))
+        {
+            DataAcquisitionMainUi.voltage_3
+                ->setText(QString("%1 V").arg(voltage,0,'f',2));
+            if (abs(current) < 1)
+                DataAcquisitionMainUi.current_3
+                    ->setText(QString("%1 mA").arg(current*1000,0,'f',0));
+            else
+                DataAcquisitionMainUi.current_3
+                    ->setText(QString("%1 A").arg(current,0,'f',2));
+        }
+        else
+        {
+            DataAcquisitionMainUi.voltage_3
+                ->setText(QString(""));
+            DataAcquisitionMainUi.current_3
+                ->setText(QString(""));
+        }
+    }
+    if ((size > 0) && (firstField == "dB4"))
+    {
+        if (activeInterfaces() & (1 << 3))
+        {
+            DataAcquisitionMainUi.voltage_4
+                ->setText(QString("%1 V").arg(voltage,0,'f',2));
+            if (abs(current) < 1)
+                DataAcquisitionMainUi.current_4
+                    ->setText(QString("%1 mA").arg(current*1000,0,'f',0));
+            else
+                DataAcquisitionMainUi.current_4
+                    ->setText(QString("%1 A").arg(current,0,'f',2));
+        }
+        else
+        {
+            DataAcquisitionMainUi.voltage_4
+                ->setText(QString(""));
+            DataAcquisitionMainUi.current_4
+                ->setText(QString(""));
+        }
+    }
+    if ((size > 0) && (firstField == "dB5"))
+    {
+        if (activeInterfaces() & (1 << 4))
+        {
+            DataAcquisitionMainUi.voltage_5
+                ->setText(QString("%1 V").arg(voltage,0,'f',2));
+            if (abs(current) < 1)
+                DataAcquisitionMainUi.current_5
+                    ->setText(QString("%1 mA").arg(current*1000,0,'f',0));
+            else
+                DataAcquisitionMainUi.current_5
+                    ->setText(QString("%1 A").arg(current,0,'f',2));
+        }
+        else
+        {
+            DataAcquisitionMainUi.voltage_5
+                ->setText(QString(""));
+            DataAcquisitionMainUi.current_5
+                ->setText(QString(""));
+        }
+    }
+    if ((size > 0) && (firstField == "dB6"))
+    {
+        if (activeInterfaces() & (1 << 5))
+        {
+            DataAcquisitionMainUi.voltage_6
+                ->setText(QString("%1 V").arg(voltage,0,'f',2));
+            if (abs(current) < 1)
+                DataAcquisitionMainUi.current_6
+                    ->setText(QString("%1 mA").arg(current*1000,0,'f',0));
+            else
+                DataAcquisitionMainUi.current_6
+                    ->setText(QString("%1 A").arg(current,0,'f',2));
+        }
+        else
+        {
+            DataAcquisitionMainUi.voltage_6
+                ->setText(QString(""));
+            DataAcquisitionMainUi.current_6
+                ->setText(QString(""));
+        }
     }
 
 /* Messages for the File Module start with f */
@@ -363,9 +460,9 @@ void DataAcquisitionGui::on_configureButton_clicked()
 
 void DataAcquisitionGui::on_testButton_clicked()
 {
-
+    int setting = activeInterfaces();
     DataAcquisitionTestGui* dataAcquisitionTestForm =
-                    new DataAcquisitionTestGui(port,this);
+                    new DataAcquisitionTestGui(port,setting,this);
     dataAcquisitionTestForm->setAttribute(Qt::WA_DeleteOnClose);
     dataAcquisitionTestForm->exec();
 }
@@ -472,3 +569,30 @@ void DataAcquisitionGui::on_connectButton_clicked()
     }
     setSourceComboBox(DataAcquisitionMainUi.sourceComboBox->currentIndex());
 }
+
+//-----------------------------------------------------------------------------
+/** @brief Settings of display enables for source, loads and devices.
+
+@returns int: the active interfaces bits 0-5 representing active device 1-3,
+load 1-2 and source in order.
+*/
+
+int DataAcquisitionGui::activeInterfaces()
+{
+    int setting = 0;
+    if (DataAcquisitionMainUi.deviceCheckBox_1->isChecked())
+        setting |= (1 << 0);
+    if (DataAcquisitionMainUi.deviceCheckBox_2->isChecked())
+        setting |= (1 << 1);
+    if (DataAcquisitionMainUi.deviceCheckBox_3->isChecked())
+        setting |= (1 << 2);
+    if (DataAcquisitionMainUi.loadCheckBox_1->isChecked())
+        setting |= (1 << 3);
+    if (DataAcquisitionMainUi.loadCheckBox_2->isChecked())
+        setting |= (1 << 4);
+    if (DataAcquisitionMainUi.sourceCheckBox->isChecked())
+        setting |= (1 << 5);
+    return setting;
+}
+
+
