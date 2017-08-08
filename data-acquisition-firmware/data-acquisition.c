@@ -63,14 +63,23 @@ Initial 23 November 2016
 
 /* Local Prototypes */
 static void parseCommand(uint8_t* line);
-static void hardwareActions(void);
 
 /* Globals */
 static uint8_t writeFileHandle;
 static uint8_t readFileHandle;
 static char writeFileName[12];
 static char readFileName[12];
-static uint16_t interface;         /* Interface in reset */
+static uint16_t interface;         /* Interface to be reset */
+static uint8_t resetTimer;
+static uint8_t testType;
+static uint32_t voltageLimit;
+static uint32_t timeLimit;
+static uint32_t timeElapsed;
+static uint8_t device;
+static uint8_t setting;
+static bool testRunning;
+static int32_t current[NUM_INTERFACES];
+static uint64_t voltage[NUM_INTERFACES];
 
 /* These configuration variables are part of the Object Dictionary. */
 /* This is defined in power-management-objdic and is updated in response to
@@ -107,8 +116,6 @@ int main(void)
 
     uint16_t i = 0;
     uint32_t avg[NUM_CHANNEL];
-    int32_t current[NUM_INTERFACES];
-    uint64_t voltage[NUM_INTERFACES];
 
     setDelayCount(configData.config.measurementInterval);
 
@@ -121,8 +128,18 @@ int main(void)
     writeFileName[0] = 0;
     readFileName[0] = 0;
 
-/* Main event loop */
     interface = 0;
+    resetTimer = 0;
+
+    testType = 0;
+    voltageLimit = 0;
+    timeLimit = 0;
+    timeElapsed = 0;
+    device = 0;
+    setting = 0;
+    testRunning = false;
+
+/* Main event loop */
 	while (1)
 	{
 /* -------- CLI ------------*/
@@ -141,7 +158,6 @@ int main(void)
             }
             else line[characterPosition++] = character;
         }
-        hardwareActions();          /* Check if any actions need to be taken */
         if (getDelayCount() > 0xFFFFFF) setDelayCount(configData.config.measurementInterval);
 
 /* -------- Measurements --------- */
@@ -202,6 +218,9 @@ source. */
 /* Send out switch status */
             sendResponse("ds",(int)getSwitchControlBits());
             recordSingle("ds",(int)getSwitchControlBits(),writeFileHandle);
+/* Send out running test information. This is always sent during a test
+run even if no time limit has been set to indicate an active test run. */
+            if (testRunning) sendResponse("dT",timeElapsed);
         }
 	}
 
@@ -233,14 +252,27 @@ Action Commands */
 /* Snm Manually set switch. Follow by device n (1-3, 0 = none) and
 load m (0-1)/source (2). Each two-bit field represents a load or panel, and the
 setting is the battery to be connected (no two batteries can be connected to a
-load/panel). */
+load/panel).
+This starts a test run if the testType has been correctly set. */
         switch (line[1])
         {
         case 'S':
             {
-                uint8_t device = line[2]-'0';
-                uint8_t setting = line[3]-'0'-1;
-                if ((device < 4) && (setting < 4)) setSwitch(device, setting);
+                device = line[2]-'0';
+                setting = line[3]-'0'-1;
+                if ((testType > 0) && (testType < 4) && (voltageLimit > 0) &&
+                    (device > 0) && (device < 4) && (setting < 3))
+                {
+                    setSwitch(device, setting);
+                    testRunning = true;
+                }
+                break;
+            }
+/* X Test run - Manual Stop */
+        case 'X':
+            {
+                setSwitch(0, setting);
+                testRunning = false;
                 break;
             }
 /* Rn Reset an interface. Set a timer to expire after 250ms at which time the
@@ -250,10 +282,14 @@ being device 1-3, loads 1-2 and source. */
             {
                 interface = line[2]-'0';
                 if (interface > NUM_INTERFACES-1) break;
-                if (interface > 0) overCurrentReset(interface);
+                if (interface > 0)
+                {
+                    overCurrentReset(interface);
+                    resetTimer = 25;        /* Set to 250 ms */
+                }
                 break;
             }
-/* Write the current configuration block to FLASH */
+/* W Write the current configuration block to FLASH */
         case 'W':
             {
                 writeConfigBlock();
@@ -327,6 +363,24 @@ Parameter Setting Commands */
                 if (line[2] == '-') configData.config.recording = false;
                 else if ((line[2] == '+') && (writeFileHandle < 0x0FF))
                     configData.config.recording = true;
+                break;
+            }
+/* Tn Test run - Set Time limit n in seconds */
+        case 'T':
+            {
+                timeLimit = asciiToInt((char*)line+2);
+                break;
+            }
+/* Vn Test run - Voltage limit n in volts times 256 */
+        case 'V':
+            {
+                voltageLimit = asciiToInt((char*)line+2);
+                break;
+            }
+/* Rn Test run - Start test with test type specified n = 1-3. */
+        case 'R':
+            {
+                testType = line[2]-'0';
                 break;
             }
         }
@@ -422,7 +476,7 @@ Returns a file handle. On error, file handle is 0xFF. */
                     if (fileStatus == 0)
                     {
                         stringCopy(readFileName,(char*)line+2);
-                         sendResponse("fR",readFileHandle);
+                        sendResponse("fR",readFileHandle);
                     }
                     sendResponse("fE",(uint8_t)fileStatus);
                 }
@@ -503,12 +557,40 @@ and filename, or blank if any file is not open. */
 }
 
 /*--------------------------------------------------------------------------*/
-static void hardwareActions(void)
+/** @brief Take certain timed actions every 10ms.
+
+These are hardware reset, and timed test runs, both of which are one-shot
+timers.
+*/
+
+void timer_proc(void)
 {
-    if ((interface > 0) && (getMillisecondsCount() & 0xFF) == 0)
+    static uint32_t secondsTimer = 0;
+/* Handle timer for over current reset release */
+    if ((interface > 0) && (resetTimer-- == 0))
     {
         overCurrentRelease(interface);
         interface = 0;
     }
+/* handle timer and voltage checks for test runs every second */
+    if (secondsTimer++ > 100)
+    {
+        secondsTimer = 0;
+        if (testRunning)
+        {
+            timeElapsed++;
+            if (((testType == 2) && (timeLimit > 0) && (timeElapsed > timeLimit))
+                || (voltage[device-1] < voltageLimit))
+            {
+                testRunning = false;
+                voltageLimit = 0;
+                testType = 0;
+                timeLimit = 0;
+                timeElapsed = 0;
+                setSwitch(0, setting);
+            }
+        }
+    }
 }
+
 

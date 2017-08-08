@@ -72,7 +72,6 @@ uint8_t getSwitchControlBits(void);
 void setSwitchControlBits(uint8_t settings);
 void overCurrentReset(uint32_t interface);
 void overCurrentRelease(uint32_t interface);
-uint32_t getMillisecondsCount(void);
 
 #endif
 

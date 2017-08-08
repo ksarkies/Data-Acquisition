@@ -40,6 +40,7 @@ Here the data stream from the remote is received and saved to a file.
 #include <QCloseEvent>
 #include <QFileDialog>
 #include <QDateTime>
+#include <QTimer>
 #include <QSerialPort>
 #include <QSerialPortInfo>
 #include <QDir>
@@ -81,6 +82,8 @@ DataAcquisitionGui::DataAcquisitionGui(QString device, uint parameter,
 /* This should cause the remote microcontroller to respond with all data */
         port->write("dS\n\r");
     }
+    on_manualButton_clicked();
+    testRunning = false;
 }
 
 DataAcquisitionGui::~DataAcquisitionGui()
@@ -189,6 +192,23 @@ qDebug() << response;
     QString thirdField;
     if (size > 2) thirdField = breakdown[2].simplified();
     if (! saveFile.isEmpty()) saveLine(response);
+/* Interpret running test status information */
+    if ((size > 0) && (firstField == "dT"))
+    {
+        if (size > 1)
+        {
+            long timeElapsed = secondField.toInt();
+            int seconds = timeElapsed % 60;
+            int minutes = (seconds/60) %60;
+            int hours = (minutes/60);
+            QString qTimeElapsed = QString("%1:%2:%3")
+                    .arg(hours,2,10,QLatin1Char('0'))
+                    .arg(minutes,2,10,QLatin1Char('0'))
+                    .arg(seconds,2,10,QLatin1Char('0'));
+            DataAcquisitionMainUi.testTimeToGo->setValue(testTime-timeElapsed);
+            DataAcquisitionMainUi.timeElapsed->setText(qTimeElapsed);
+        }
+    }
 /* When the time field is received, send back a short message to keep comms
 alive. Also check for calibration as time messages stop during this process. */
     if ((size > 0) && (firstField == "pH"))
@@ -334,6 +354,13 @@ alive. Also check for calibration as time messages stop during this process. */
         }
     }
 
+    if ((size > 0) && (firstField == "ds"))
+    {
+        uint setting = secondField.toInt();
+        if (setting > 0)  DataAcquisitionMainUi.startButton->
+                            setStyleSheet("background-color:lightgreen;");
+    }
+
 /* Messages for the File Module start with f */
     if ((size > 0) && (firstField.left(1) == "f"))
     {
@@ -453,20 +480,6 @@ void DataAcquisitionGui::on_configureButton_clicked()
     dataAcquisitionConfigForm->exec();
 }
 
-//-----------------------------------------------------------------------------
-/** @brief Call up the Test Window.
-
-*/
-
-void DataAcquisitionGui::on_testButton_clicked()
-{
-    int setting = activeInterfaces();
-    DataAcquisitionTestGui* dataAcquisitionTestForm =
-                    new DataAcquisitionTestGui(port,setting,this);
-    dataAcquisitionTestForm->setAttribute(Qt::WA_DeleteOnClose);
-    dataAcquisitionTestForm->exec();
-}
-
 /*---------------------------------------------------------------------------*/
 /** @brief Show an error condition in the Error label.
 
@@ -496,16 +509,6 @@ QString DataAcquisitionGui::error()
 bool DataAcquisitionGui::success()
 {
     return true;
-}
-
-/*---------------------------------------------------------------------------*/
-/** @brief Close off the window and deallocate resources
-
-This may not be necessary as QT may implement it implicitly.
-*/
-void DataAcquisitionGui::closeEvent(QCloseEvent *event)
-{
-    event->accept();
 }
 
 /*---------------------------------------------------------------------------*/
@@ -593,6 +596,128 @@ int DataAcquisitionGui::activeInterfaces()
     if (DataAcquisitionMainUi.sourceCheckBox->isChecked())
         setting |= (1 << 5);
     return setting;
+}
+
+//-----------------------------------------------------------------------------
+/** @brief Manual Test Run.
+
+*/
+
+void DataAcquisitionGui::on_manualButton_clicked()
+{
+    DataAcquisitionMainUi.durationSpinBox->setVisible(false);
+    DataAcquisitionMainUi.durationLabel->setVisible(false);
+    DataAcquisitionMainUi.voltageSpinBox->setVisible(true);
+    DataAcquisitionMainUi.voltageLabel->setText("Minimum Voltage");
+    DataAcquisitionMainUi.voltageLabel->setVisible(true);
+}
+
+//-----------------------------------------------------------------------------
+/** @brief Timed Test Run.
+
+*/
+
+void DataAcquisitionGui::on_timerButton_clicked()
+{
+    DataAcquisitionMainUi.durationSpinBox->setVisible(true);
+    DataAcquisitionMainUi.durationLabel->setText("Run Time (minutes)");
+    DataAcquisitionMainUi.durationLabel->setVisible(true);
+    DataAcquisitionMainUi.voltageSpinBox->setVisible(true);
+    DataAcquisitionMainUi.voltageLabel->setText("Minimum Voltage");
+    DataAcquisitionMainUi.voltageLabel->setVisible(true);
+}
+
+//-----------------------------------------------------------------------------
+/** @brief Voltage Level Test Run.
+
+*/
+
+void DataAcquisitionGui::on_voltageButton_clicked()
+{
+    DataAcquisitionMainUi.durationSpinBox->setVisible(false);
+    DataAcquisitionMainUi.durationLabel->setVisible(false);
+    DataAcquisitionMainUi.voltageSpinBox->setVisible(true);
+    DataAcquisitionMainUi.voltageLabel->setText("Voltage Level");
+    DataAcquisitionMainUi.voltageLabel->setVisible(true);
+}
+
+//-----------------------------------------------------------------------------
+/** @brief Start Test.
+
+Connect loads and sources to devices under test according to the settings passed
+from the calling program. Then passes type of test, voltage and time to go.
+*/
+
+void DataAcquisitionGui::on_startButton_clicked()
+{
+    DataAcquisitionMainUi.startButton->
+        setStyleSheet("background-color:lightgreen;");
+    if (interfaces & (1 << 3))
+    {
+        if (interfaces & (1 << 0))
+            port->write("aS11\n\r");
+        if (interfaces & (1 << 1))
+            port->write("aS21\n\r");
+        if (interfaces & (1 << 2))
+            port->write("aS31\n\r");
+    }
+    if (interfaces & (1 << 4))
+    {
+        if (interfaces & (1 << 0))
+            port->write("aS12\n\r");
+        if (interfaces & (1 << 1))
+            port->write("aS22\n\r");
+        if (interfaces & (1 << 2))
+            port->write("aS32\n\r");
+    }
+    if (interfaces & (1 << 5))
+    {
+        if (interfaces & (1 << 0))
+            port->write("aS13\n\r");
+        if (interfaces & (1 << 1))
+            port->write("aS23\n\r");
+        if (interfaces & (1 << 2))
+            port->write("aS33\n\r");
+    }
+// Format up test parameters and send.
+    testTime = DataAcquisitionMainUi.durationSpinBox->value()*60;
+    voltageLimit = (long)(DataAcquisitionMainUi.voltageSpinBox->value()*256);
+    testType = 0;
+    if (DataAcquisitionMainUi.manualButton->isChecked()) testType = 1;
+    else if (DataAcquisitionMainUi.timerButton->isChecked()) testType = 2;
+    else if (DataAcquisitionMainUi.voltageButton->isChecked()) testType = 3;
+    port->write(QString("pT%1\n\r").arg(testTime).toLatin1());
+    port->write(QString("pV%1\n\r").arg(voltageLimit).toLatin1());
+    port->write(QString("pR%1\n\r").arg(testType).toLatin1());
+    DataAcquisitionMainUi.testTimeToGo->setMaximum(testTime);
+    DataAcquisitionMainUi.testTimeToGo->setValue(testTime);
+    DataAcquisitionMainUi.testTimeToGo->setMinimum(0);
+    DataAcquisitionMainUi.timeElapsed->setText("00:00:00");
+}
+
+//-----------------------------------------------------------------------------
+/** @brief Stop Test.
+
+Disconnect all loads and sources.
+*/
+
+void DataAcquisitionGui::on_stopButton_clicked()
+{
+    DataAcquisitionMainUi.startButton->
+        setStyleSheet("background-color:lightpink;");
+    port->write("aS01\n\r");
+    port->write("aS02\n\r");
+    port->write("aS03\n\r");
+}
+
+/*---------------------------------------------------------------------------*/
+/** @brief Close off the window and deallocate resources
+
+This may not be necessary as QT may implement it implicitly.
+*/
+void DataAcquisitionGui::closeEvent(QCloseEvent *event)
+{
+    event->accept();
 }
 
 

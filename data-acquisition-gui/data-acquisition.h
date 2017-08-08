@@ -34,6 +34,7 @@ Here the data stream from the remote is received and saved to a file.
 #include <QDir>
 #include <QFile>
 #include <QTime>
+#include <QTimer>
 #include <QSerialPort>
 #include <QSerialPortInfo>
 #include <QListWidgetItem>
@@ -61,8 +62,12 @@ private slots:
     void on_saveFileButton_clicked();
     void on_closeFileButton_clicked();
     void on_recordingButton_clicked();
-    void on_testButton_clicked();
     void on_configureButton_clicked();
+    void on_startButton_clicked();
+    void on_stopButton_clicked();
+    void on_manualButton_clicked();
+    void on_timerButton_clicked();
+    void on_voltageButton_clicked();
     void closeEvent(QCloseEvent*);
 signals:
     void recordMessageReceived(const QString response);
@@ -80,6 +85,7 @@ private:
     void ssleep(int seconds);
     int activeInterfaces(void);
 // Variables
+    int interfaces;
     QString serialDevice;
     uint baudrate;
     bool synchronized;
@@ -90,6 +96,11 @@ private:
     QString saveFile;
     QFile* outFile;
     QTime tick;
+    long testTime;
+    long timeElapsed;
+    int voltageLimit;
+    int testType;
+    bool testRunning;
 };
 
 #endif

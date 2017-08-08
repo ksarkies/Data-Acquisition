@@ -25,5 +25,7 @@ K. Sarkies, 9 December 2016
 
 #include <stdint.h>
 
+void timer_proc(void);
+
 #endif
 

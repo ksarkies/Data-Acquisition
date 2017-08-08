@@ -53,7 +53,7 @@ DataAcquisitionConfigGui::DataAcquisitionConfigGui(QSerialPort* p, QWidget* pare
     socket = p;
     DataAcquisitionConfigUi.setupUi(this);
 /* Ask for identification */
-    socket->write("aE\n\r");
+    socket->write("dE\n\r");
 }
 
 DataAcquisitionConfigGui::~DataAcquisitionConfigGui()

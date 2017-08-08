@@ -46,6 +46,7 @@ K. Sarkies, 10 December 2016
 #include "hardware.h"
 #include "comms.h"
 #include "hardware-bms.h"
+#include "data-acquisition.h"
 
 #define  _BV(bit) (1 << (bit))
 
@@ -756,24 +757,17 @@ void sys_tick_handler(void)
 {
     millisecondsCount++;
 /* SD card status update. */
-    if ((millisecondsCount % (10)) == 0) disk_timerproc();
+    if ((millisecondsCount % (10)) == 0)
+    {
+        disk_timerproc();       /* File System hardware checks */
+        timer_proc();           /* test run and other checks */
+    }
 
 /* updated every second if systick is used for the real-time clock. */
     if ((millisecondsCount % 1000) == 0) secondsCount++;
 
 /* down counter for timing. */
     downCount--;
-}
-
-/*--------------------------------------------------------------------------*/
-/* Retrieve Millisecond Counter
-
-@returns uint32_t milliseconds count
-*/
-
-uint32_t getMillisecondsCount(void)
-{
-    return millisecondsCount;
 }
 
 /*--------------------------------------------------------------------------*/
