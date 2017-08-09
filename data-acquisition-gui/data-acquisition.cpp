@@ -79,8 +79,8 @@ DataAcquisitionGui::DataAcquisitionGui(QString device, uint parameter,
     {
 /* Turn on remote microcontroller communications */
         port->write("pc+\n\r");
-/* This should cause the remote microcontroller to respond with all data */
-        port->write("dS\n\r");
+/* Query preset test parameters */
+        port->write("aP\n\r");
     }
     on_manualButton_clicked();
     testRunning = false;
@@ -194,23 +194,55 @@ qDebug() << response;
     QString thirdField;
     if (size > 2) thirdField = breakdown[2].simplified();
     if (! saveFile.isEmpty()) saveLine(response);
+/* Preset test parameters. */
+    if ((size > 0) && (firstField == "dP"))
+    {
+        testType = secondField.toInt();
+        testTime = thirdField.toInt();
+        if (testType == 1)
+            DataAcquisitionMainUi.manualButton->setChecked(true);
+        else if (testType == 2)
+            DataAcquisitionMainUi.timerButton->setChecked(true);
+        else if (testType == 3)
+            DataAcquisitionMainUi.voltageButton->setChecked(true);
+        if (testType == 2)
+        {
+            DataAcquisitionMainUi.durationSpinBox->setValue(testTime/60);
+            DataAcquisitionMainUi.durationSpinBox->setVisible(true);
+            DataAcquisitionMainUi.durationLabel->setVisible(true);
+            DataAcquisitionMainUi.testTimeToGo->setMaximum(testTime);
+            DataAcquisitionMainUi.testTimeToGo->setValue(testTime-timeElapsed);
+            DataAcquisitionMainUi.testTimeToGo->setMinimum(0);
+            DataAcquisitionMainUi.testTimeToGo->setVisible(true);
+        }
+    }
+/* Preset test parameters. */
+    if ((size > 0) && (firstField == "dV"))
+    {
+        voltageLimit = secondField.toInt();
+        if (voltageLimit == 0) voltageLimit = 11*256;
+        DataAcquisitionMainUi.voltageSpinBox->setValue((float)voltageLimit/256);
+    }
 /* Test time information. */
-    if ((size > 0) && (firstField == "dE"))
+    if ((size > 0) && (firstField == "dR"))
     {
         if (size > 1)
         {
             long timeElapsed = secondField.toInt();
             int seconds = timeElapsed % 60;
-            int minutes = (timeElapsed/60) %60;
-            int hours = (timeElapsed/3600) %24;
-            int days = (timeElapsed/(3600)*24);
+            int minutes = (timeElapsed/60) % 60;
+            int hours = (timeElapsed/3600) % 24;
+            int days = (timeElapsed/(3600*24));
             QString qTimeElapsed = QString("%1 %2:%3:%4")
                     .arg(days,2,10,QLatin1Char('0'))
                     .arg(hours,2,10,QLatin1Char('0'))
                     .arg(minutes,2,10,QLatin1Char('0'))
                     .arg(seconds,2,10,QLatin1Char('0'));
             if ((testType == 2) && (testTime > 0))
+            {
+                DataAcquisitionMainUi.testTimeToGo->setVisible(true);
                 DataAcquisitionMainUi.testTimeToGo->setValue(testTime-timeElapsed);
+            }
             DataAcquisitionMainUi.timeElapsed->setText(qTimeElapsed);
         }
     }

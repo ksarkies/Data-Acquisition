@@ -220,7 +220,7 @@ source. */
             recordSingle("ds",(int)getSwitchControlBits(),writeFileHandle);
 /* Send out running test information. This is always sent during a test
 run even if no time limit has been set to indicate an active test run. */
-            if (testRunning) sendResponse("dE",timeElapsed);
+            if (testRunning) sendResponse("dR",timeElapsed);
             sendResponse("dX",testRunning);
         }
 	}
@@ -260,6 +260,13 @@ load/panel). */
                 setting = line[3]-'0'-1;
                 if ((device > 0) && (device <= NUM_DEVICES) && (setting < 3))
                     setSwitch(device, setting);
+                break;
+            }
+/* Request preset test parameters to be sent back. */
+        case 'P':
+            {
+                dataMessageSend("dP",testType,timeLimit);
+                sendResponse("dV",voltageLimit);
                 break;
             }
 /* This starts a test run if the testType has been correctly set. */
@@ -591,9 +598,6 @@ void timer_proc(void)
                 || (voltage[device-1] < voltageLimit))
             {
                 testRunning = false;
-                voltageLimit = 0;
-                testType = 0;
-                timeLimit = 0;
                 timeElapsed = 0;
                 setSwitch(0, setting);
             }
