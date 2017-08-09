@@ -108,6 +108,8 @@ void DataAcquisitionGui::initMainWindow(Ui::DataAcquisitionMainDialog mainWindow
     mainWindow.baudrateComboBox->setEnabled(true);
     mainWindow.baudrateComboBox->show();
     mainWindow.baudrateComboBox->raise();
+    DataAcquisitionMainUi.testTimeToGo->setVisible(false);
+    DataAcquisitionMainUi.timeElapsed->setText("00 00:00:00");
 }
 
 /*---------------------------------------------------------------------------*/
@@ -192,21 +194,37 @@ qDebug() << response;
     QString thirdField;
     if (size > 2) thirdField = breakdown[2].simplified();
     if (! saveFile.isEmpty()) saveLine(response);
-/* Interpret running test status information */
-    if ((size > 0) && (firstField == "dT"))
+/* Test time information. */
+    if ((size > 0) && (firstField == "dE"))
     {
         if (size > 1)
         {
             long timeElapsed = secondField.toInt();
             int seconds = timeElapsed % 60;
-            int minutes = (seconds/60) %60;
-            int hours = (minutes/60);
-            QString qTimeElapsed = QString("%1:%2:%3")
+            int minutes = (timeElapsed/60) %60;
+            int hours = (timeElapsed/3600) %24;
+            int days = (timeElapsed/(3600)*24);
+            QString qTimeElapsed = QString("%1 %2:%3:%4")
+                    .arg(days,2,10,QLatin1Char('0'))
                     .arg(hours,2,10,QLatin1Char('0'))
                     .arg(minutes,2,10,QLatin1Char('0'))
                     .arg(seconds,2,10,QLatin1Char('0'));
-            DataAcquisitionMainUi.testTimeToGo->setValue(testTime-timeElapsed);
+            if ((testType == 2) && (testTime > 0))
+                DataAcquisitionMainUi.testTimeToGo->setValue(testTime-timeElapsed);
             DataAcquisitionMainUi.timeElapsed->setText(qTimeElapsed);
+        }
+    }
+/* Interpret test running status. */
+    if ((size > 0) && (firstField == "dX"))
+    {
+        if (secondField.toInt() == 1)
+            DataAcquisitionMainUi.startButton->
+                setStyleSheet("background-color:lightgreen;");
+        else
+        {
+            DataAcquisitionMainUi.startButton->
+                setStyleSheet("background-color:lightpink;");
+//            DataAcquisitionMainUi.testTimeToGo->setVisible(false);
         }
     }
 /* When the time field is received, send back a short message to keep comms
@@ -610,6 +628,7 @@ void DataAcquisitionGui::on_manualButton_clicked()
     DataAcquisitionMainUi.voltageSpinBox->setVisible(true);
     DataAcquisitionMainUi.voltageLabel->setText("Minimum Voltage");
     DataAcquisitionMainUi.voltageLabel->setVisible(true);
+    DataAcquisitionMainUi.testTimeToGo->setVisible(false);
 }
 
 //-----------------------------------------------------------------------------
@@ -625,6 +644,7 @@ void DataAcquisitionGui::on_timerButton_clicked()
     DataAcquisitionMainUi.voltageSpinBox->setVisible(true);
     DataAcquisitionMainUi.voltageLabel->setText("Minimum Voltage");
     DataAcquisitionMainUi.voltageLabel->setVisible(true);
+    DataAcquisitionMainUi.testTimeToGo->setVisible(true);
 }
 
 //-----------------------------------------------------------------------------
@@ -639,6 +659,7 @@ void DataAcquisitionGui::on_voltageButton_clicked()
     DataAcquisitionMainUi.voltageSpinBox->setVisible(true);
     DataAcquisitionMainUi.voltageLabel->setText("Voltage Level");
     DataAcquisitionMainUi.voltageLabel->setVisible(true);
+    DataAcquisitionMainUi.testTimeToGo->setVisible(false);
 }
 
 //-----------------------------------------------------------------------------
@@ -650,8 +671,30 @@ from the calling program. Then passes type of test, voltage and time to go.
 
 void DataAcquisitionGui::on_startButton_clicked()
 {
+// Format up test parameters and send.
+    testTime = DataAcquisitionMainUi.durationSpinBox->value()*60;
+    voltageLimit = (long)(DataAcquisitionMainUi.voltageSpinBox->value()*256);
+    testType = 0;
+    if (DataAcquisitionMainUi.manualButton->isChecked()) testType = 1;
+    else if (DataAcquisitionMainUi.timerButton->isChecked()) testType = 2;
+    else if (DataAcquisitionMainUi.voltageButton->isChecked()) testType = 3;
+    if ((testType == 2) && (testTime == 0)) return;
+    port->write(QString("pT%1\n\r").arg(testTime).toLatin1());
+    port->write(QString("pV%1\n\r").arg(voltageLimit).toLatin1());
+    port->write(QString("pR%1\n\r").arg(testType).toLatin1());
+    if (testType == 2)
+    {
+        DataAcquisitionMainUi.testTimeToGo->setVisible(true);
+        DataAcquisitionMainUi.testTimeToGo->setMaximum(testTime);
+        DataAcquisitionMainUi.testTimeToGo->setValue(testTime);
+        DataAcquisitionMainUi.testTimeToGo->setMinimum(0);
+    }
+    else
+        DataAcquisitionMainUi.testTimeToGo->setVisible(false);
+    DataAcquisitionMainUi.timeElapsed->setText("00 00:00:00");
     DataAcquisitionMainUi.startButton->
-        setStyleSheet("background-color:lightgreen;");
+        setStyleSheet("background-color:orange;");
+    int interfaces = activeInterfaces();
     if (interfaces & (1 << 3))
     {
         if (interfaces & (1 << 0))
@@ -679,20 +722,8 @@ void DataAcquisitionGui::on_startButton_clicked()
         if (interfaces & (1 << 2))
             port->write("aS33\n\r");
     }
-// Format up test parameters and send.
-    testTime = DataAcquisitionMainUi.durationSpinBox->value()*60;
-    voltageLimit = (long)(DataAcquisitionMainUi.voltageSpinBox->value()*256);
-    testType = 0;
-    if (DataAcquisitionMainUi.manualButton->isChecked()) testType = 1;
-    else if (DataAcquisitionMainUi.timerButton->isChecked()) testType = 2;
-    else if (DataAcquisitionMainUi.voltageButton->isChecked()) testType = 3;
-    port->write(QString("pT%1\n\r").arg(testTime).toLatin1());
-    port->write(QString("pV%1\n\r").arg(voltageLimit).toLatin1());
-    port->write(QString("pR%1\n\r").arg(testType).toLatin1());
-    DataAcquisitionMainUi.testTimeToGo->setMaximum(testTime);
-    DataAcquisitionMainUi.testTimeToGo->setValue(testTime);
-    DataAcquisitionMainUi.testTimeToGo->setMinimum(0);
-    DataAcquisitionMainUi.timeElapsed->setText("00:00:00");
+/* Start the run */
+    port->write("aG\n\r");
 }
 
 //-----------------------------------------------------------------------------
@@ -708,6 +739,8 @@ void DataAcquisitionGui::on_stopButton_clicked()
     port->write("aS01\n\r");
     port->write("aS02\n\r");
     port->write("aS03\n\r");
+/* Stop the run */
+    port->write("aX\n\r");
 }
 
 /*---------------------------------------------------------------------------*/

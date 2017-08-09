@@ -85,7 +85,6 @@ private:
     void ssleep(int seconds);
     int activeInterfaces(void);
 // Variables
-    int interfaces;
     QString serialDevice;
     uint baudrate;
     bool synchronized;

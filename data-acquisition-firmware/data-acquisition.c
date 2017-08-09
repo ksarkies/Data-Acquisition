@@ -220,7 +220,8 @@ source. */
             recordSingle("ds",(int)getSwitchControlBits(),writeFileHandle);
 /* Send out running test information. This is always sent during a test
 run even if no time limit has been set to indicate an active test run. */
-            if (testRunning) sendResponse("dT",timeElapsed);
+            if (testRunning) sendResponse("dE",timeElapsed);
+            sendResponse("dX",testRunning);
         }
 	}
 
@@ -247,32 +248,37 @@ void parseCommand(uint8_t* line)
 Action Commands */
     if (line[0] == 'a')
     {
-/**
- */
+        switch (line[1])
+        {
 /* Snm Manually set switch. Follow by device n (1-3, 0 = none) and
 load m (0-1)/source (2). Each two-bit field represents a load or panel, and the
 setting is the battery to be connected (no two batteries can be connected to a
-load/panel).
-This starts a test run if the testType has been correctly set. */
-        switch (line[1])
-        {
+load/panel). */
         case 'S':
             {
                 device = line[2]-'0';
                 setting = line[3]-'0'-1;
-                if ((testType > 0) && (testType < 4) && (voltageLimit > 0) &&
-                    (device > 0) && (device < 4) && (setting < 3))
-                {
+                if ((device > 0) && (device <= NUM_DEVICES) && (setting < 3))
                     setSwitch(device, setting);
-                    testRunning = true;
-                }
                 break;
             }
-/* X Test run - Manual Stop */
+/* This starts a test run if the testType has been correctly set. */
+        case 'G':
+            {
+                if ((testType > 0) && (testType < 4) && (voltageLimit > 0))
+                    testRunning = true;
+                break;
+            }
+/* X Test run - Manual Stop. Turn off all load/source interfaces. */
         case 'X':
             {
-                setSwitch(0, setting);
+                uint8_t setting = 0;
+                for (setting=0; setting<NUM_LOADS+NUM_SOURCES; setting++)
+                {
+                    setSwitch(0, setting);
+                }
                 testRunning = false;
+                timeElapsed = 0;
                 break;
             }
 /* Rn Reset an interface. Set a timer to expire after 250ms at which time the
@@ -557,10 +563,12 @@ and filename, or blank if any file is not open. */
 }
 
 /*--------------------------------------------------------------------------*/
-/** @brief Take certain timed actions every 10ms.
+/** @brief Take certain timed actions.
 
 These are hardware reset, and timed test runs, both of which are one-shot
 timers.
+
+This is called every 10ms from the hardware timer ISR.
 */
 
 void timer_proc(void)
@@ -579,7 +587,7 @@ void timer_proc(void)
         if (testRunning)
         {
             timeElapsed++;
-            if (((testType == 2) && (timeLimit > 0) && (timeElapsed > timeLimit))
+            if (((testType == 2) && (timeElapsed > timeLimit))
                 || (voltage[device-1] < voltageLimit))
             {
                 testRunning = false;

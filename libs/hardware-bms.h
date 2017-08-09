@@ -43,6 +43,9 @@ Initial 19 December 2016
 #define BUFFER_SIZE 128
 
 /* Number of A/D converter channels available (STM32F103) */
+#define NUM_DEVICES     3
+#define NUM_LOADS       2
+#define NUM_SOURCES     1
 #define NUM_INTERFACES  6
 #define NUM_CHANNEL     1 + 2*NUM_INTERFACES
 

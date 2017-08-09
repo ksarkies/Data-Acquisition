@@ -336,8 +336,8 @@ source.
 
 void overCurrentReset(uint32_t interface)
 {
-    uint32_t port;
-    uint16_t bit;
+    uint32_t port = 0;
+    uint16_t bit = 0;
     switch (interface)
     {
         case 0:
@@ -359,6 +359,10 @@ void overCurrentReset(uint32_t interface)
         case 4:
             port = RESET_PORT_5;
             bit = RESET_BIT_5;
+            break;
+        case 5:
+            port = RESET_PORT_6;
+            bit = RESET_BIT_6;
             break;
     }
     if (interface < 6) gpio_set(port,bit);
@@ -372,8 +376,8 @@ void overCurrentReset(uint32_t interface)
 
 void overCurrentRelease(uint32_t interface)
 {
-    uint32_t port;
-    uint16_t bit;
+    uint32_t port = 0;
+    uint16_t bit = 0;
     switch (interface)
     {
         case 0:
@@ -395,6 +399,10 @@ void overCurrentRelease(uint32_t interface)
         case 4:
             port = RESET_PORT_5;
             bit = RESET_BIT_5;
+            break;
+        case 5:
+            port = RESET_PORT_6;
+            bit = RESET_BIT_6;
             break;
     }
     if (interface < 6) gpio_clear(port,bit);
