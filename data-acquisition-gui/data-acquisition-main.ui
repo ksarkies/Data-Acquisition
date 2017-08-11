@@ -913,6 +913,9 @@
      <height>25</height>
     </rect>
    </property>
+   <property name="maximum">
+    <number>999</number>
+   </property>
   </widget>
   <widget class="QLabel" name="voltageLabel_2">
    <property name="geometry">

@@ -540,6 +540,7 @@ and filename, or blank if any file is not open. */
             {
                 uint8_t fileHandle = asciiToInt((char*)line+2);
                 uint8_t fileStatus = close_file(&fileHandle);
+                if (fileStatus == 0) writeFileHandle = 0xFF;
                 sendResponse("fE",(uint8_t)fileStatus);
                 break;
             }

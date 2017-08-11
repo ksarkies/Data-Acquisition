@@ -62,7 +62,6 @@ DataAcquisitionRecordGui::DataAcquisitionRecordGui(QSerialPort* p, QWidget* pare
 {
     socket = p;
     DataAcquisitionRecordUi.setupUi(this);
-    requestRecordingStatus();
 // Ask for the microcontroller SD card free space (process response later)
     getFreeSpace();
     model = new QStandardItemModel(0, 2, this);
@@ -80,6 +79,7 @@ DataAcquisitionRecordGui::DataAcquisitionRecordGui(QSerialPort* p, QWidget* pare
 // Send a command to refresh the directory
     refreshDirectory();
     writeFileHandle = 0xFF;
+    requestRecordingStatus();
 }
 
 DataAcquisitionRecordGui::~DataAcquisitionRecordGui()
