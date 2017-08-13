@@ -424,6 +424,7 @@ bool DataProcessingGui::combineRecords(QDateTime startTime, QDateTime endTime,
     {
         if  (time > endTime) break;
       	QString lineIn = inStream.readLine();
+        if (lineIn.size() <= 1) break;
         QStringList breakdown = lineIn.split(",");
         int size = breakdown.size();
         if (size <= 0) break;
@@ -547,6 +548,7 @@ QDateTime DataProcessingGui::findFirstTimeRecord(QFile* inFile)
     while (! inStream.atEnd())
     {
       	QString lineIn = inStream.readLine();
+        if (lineIn.size() <= 1) break;
         QStringList breakdown = lineIn.split(",");
         int size = breakdown.size();
         if (size <= 0) break;
@@ -611,6 +613,7 @@ void DataProcessingGui::scanFile(QFile* inFile)
     while (! inStream.atEnd())
     {
       	QString lineIn = inStream.readLine();
+        if (lineIn.size() <= 1) break;
         QStringList breakdown = lineIn.split(",");
         int length = breakdown.size();
         if (length <= 0) break;
