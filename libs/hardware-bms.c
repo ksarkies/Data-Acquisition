@@ -74,6 +74,19 @@ extern void disk_timerproc();
 /*--------------------------------------------------------------------------*/
 /* Helpers */
 /*--------------------------------------------------------------------------*/
+/** @brief Initialise hardware
+*/
+
+void hardwareInit(void)
+{
+    clock_setup();
+    gpio_setup();
+    systickSetup();
+    rtc_setup();
+    dma_adc_setup();
+    adc_setup();
+}
+
 /** @brief Disable Global interrupts
 */
 

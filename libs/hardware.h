@@ -45,6 +45,7 @@ K. Sarkies, 5 August 2017
 /* Prototypes */
 /*--------------------------------------------------------------------------*/
 
+void hardwareInit(void);
 void cli(void);
 void sei(void);
 void commsEnableTxInterrupt(uint8_t enable);

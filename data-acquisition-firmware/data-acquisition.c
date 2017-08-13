@@ -91,13 +91,8 @@ extern union ConfigGroup configData;
 int main(void)
 {
     setGlobalDefaults();
-    clock_setup();
-    gpio_setup();
-    systickSetup();
-    rtc_setup();
+    hardwareInit();
 
-    dma_adc_setup();
-    adc_setup();
     uint8_t channel_array[NUM_CHANNEL];
     channel_array[0] = ADC_CHANNEL_0;
     channel_array[1] = ADC_CHANNEL_1;
