@@ -32,6 +32,7 @@ K. Sarkies, 10 December 2016
 /* Prototypes */
 /*--------------------------------------------------------------------------*/
 
+bool file_system_usable(void);
 uint8_t init_file_system(void);
 uint8_t make_filesystem(void);
 uint8_t get_free_clusters(uint32_t* freeClusters, uint32_t* clusterSize);

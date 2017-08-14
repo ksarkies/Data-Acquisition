@@ -433,6 +433,7 @@ directory, then size and name are not sent back. The type character can be:
  f = file, d = directory, n = error e = end */
             case 'd':
             {
+                if (! file_system_usable()) break;
                 char fileName[20];
                 char type;
                 uint32_t size;
@@ -459,6 +460,7 @@ Parameter is a filename, 8 character plus dot plus 3 character extension.
 Returns a file handle. On error, file handle is 0xFF. */
             case 'W':
             {
+                if (! file_system_usable()) break;
                 if (stringLength((char*)line+2) < 12)
                 {
                     uint8_t fileStatus =
@@ -477,6 +479,7 @@ Parameter is a filename, 8 character plus dot plus 3 character extension.
 Returns a file handle. On error, file handle is 0xFF. */
             case 'R':
             {
+                if (! file_system_usable()) break;
                 if (stringLength((char*)line+2) < 12)
                 {
                     uint8_t fileStatus = 
@@ -494,6 +497,7 @@ Returns a file handle. On error, file handle is 0xFF. */
 separated list. */
             case 'G':
             {
+                if (! file_system_usable()) break;
                 uint8_t fileHandle = asciiToInt((char*)line+2);
                 if (valid_file_handle(fileHandle))
                 {
@@ -533,6 +537,7 @@ and filename, or blank if any file is not open. */
 /* Cf Close File specified by f=file handle. */
             case 'C':
             {
+                if (! file_system_usable()) break;
                 uint8_t fileHandle = asciiToInt((char*)line+2);
                 uint8_t fileStatus = close_file(&fileHandle);
                 if (fileStatus == 0) writeFileHandle = 0xFF;
@@ -542,6 +547,7 @@ and filename, or blank if any file is not open. */
 /* X Delete File. */
             case 'X':
             {
+                if (! file_system_usable()) break;
                 uint8_t fileStatus = delete_file((char*)line+2);
                 sendResponse("fE",(uint8_t)fileStatus);
                 break;

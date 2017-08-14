@@ -43,7 +43,7 @@ static FATFS Fatfs[_VOLUMES];
 static FATFS* fs;		            /* File system object for logical drive 0 */
 static FIL file[MAX_OPEN_FILES];    /* file descriptions. */
 static FILINFO fileInfo[MAX_OPEN_FILES];    /* file information (open files) */
-static bool fileUsable;
+static bool fileSystemUsable;
 static uint8_t filemap;             /* map of open file handles */
 
 /*--------------------------------------------------------------------------*/
@@ -53,6 +53,18 @@ static uint8_t find_file_handle(void);
 static void delete_file_handle(uint8_t fileHandle);
 /*--------------------------------------------------------------------------*/
 /* Helpers */
+/*--------------------------------------------------------------------------*/
+/** @brief File System Usable Check
+
+The global variable is set whenever a system mount or create is done, and when
+the file system status is requested.
+*/
+
+bool file_system_usable(void)
+{
+    return fileSystemUsable;
+}
+
 /*--------------------------------------------------------------------------*/
 /** @brief File Initialization
 
@@ -64,7 +76,7 @@ uint8_t init_file_system(void)
 {
 /* initialise the drive working area */
     FRESULT fileStatus = f_mount(&Fatfs[0],"",0);
-    fileUsable = (fileStatus == FR_OK);
+    fileSystemUsable = (fileStatus == FR_OK);
 
 /* Initialise some global variables */
     uint8_t i=0;
@@ -98,6 +110,7 @@ uint8_t make_filesystem(void)
     fileStatus = f_mkfs("", FM_FAT32, SECTOR_SIZE*CLUSTER_SIZE,
                             workspace, WORKSPACE_SIZE);
 #endif
+    fileSystemUsable = (fileStatus == FR_OK);
     return fileStatus;
 }
 
@@ -115,6 +128,7 @@ uint8_t get_free_clusters(uint32_t* freeClusters, uint32_t* clusterSize)
 {
     FRESULT fileStatus = f_getfree("", (DWORD*)freeClusters, &fs);
     *clusterSize = fs->csize;
+    fileSystemUsable = (fileStatus == FR_OK);
     return fileStatus;
 }
 

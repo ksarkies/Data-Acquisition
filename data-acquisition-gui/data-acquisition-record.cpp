@@ -94,6 +94,7 @@ If the delete checkbox is selected, delete the file (if it exists).
 
 void DataAcquisitionRecordGui::on_deleteButton_clicked()
 {
+    on_closeFileButton_clicked();
     QString fileName = DataAcquisitionRecordUi.recordFileName->text();
     if ((fileName.length() > 0) &&
         (DataAcquisitionRecordUi.deleteCheckBox->isChecked()))
@@ -116,6 +117,7 @@ started. This is processed later.
 
 void DataAcquisitionRecordGui::on_recordFileButton_clicked()
 {
+    on_registerButton_clicked();
     QString fileName = DataAcquisitionRecordUi.recordFileName->text();
     if (fileName.length() > 0)
     {
@@ -253,7 +255,7 @@ the previous entry has been fully received.
             for (int i=1; i<breakdown.size(); i++)
             {
                 QChar type = breakdown[i][0];
-                if (type == 'e') break;
+                if ((type == 'e') || (type == 'n')) break;
                 bool ok;
                 QString fileSize = QString("%1")
                     .arg((float)breakdown[i].mid(1,8).toInt(&ok,16)/1000000,8,'f',3);
@@ -417,6 +419,7 @@ one has been received.
 
 void DataAcquisitionRecordGui::refreshDirectory()
 {
+qDebug() << "Ref Dir";
     model->clear();
     socket->write("fd/\n\r");
 }
