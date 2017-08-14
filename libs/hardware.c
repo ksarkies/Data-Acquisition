@@ -23,8 +23,6 @@ K. Sarkies, 5 August 2017
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
-
 /*--------------------------------------------------------------------------*/
 /* BMS board includes the processor STM32F103 */
 

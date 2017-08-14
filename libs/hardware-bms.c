@@ -26,8 +26,6 @@ K. Sarkies, 10 December 2016
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
-
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/rtc.h>
 #include <libopencm3/stm32/gpio.h>
@@ -75,6 +73,8 @@ extern void disk_timerproc();
 /* Helpers */
 /*--------------------------------------------------------------------------*/
 /** @brief Initialise hardware
+
+Basic setup of hardware.
 */
 
 void hardwareInit(void)
@@ -85,8 +85,39 @@ void hardwareInit(void)
     rtc_setup();
     dma_adc_setup();
     adc_setup();
+    usart1_setup();
 }
 
+/*--------------------------------------------------------------------------*/
+/** @brief Setup the ADC channels
+
+Specify the A/D channels to the hardware to tell it where to place conversion
+results.
+
+@param[in] adc: uint8_t A/D converter number.
+@param[in] numberChannels: uint8_t
+@param[in] channelArray: uint8_t* Array to receive the conversion results.
+*/
+
+void setAdcChannelSequence(uint8_t adc, uint8_t numberChannels, uint8_t* channelArray)
+{
+    if (adc == 0)
+        adc_set_regular_sequence(ADC1, numberChannels, channelArray);
+}
+
+/*--------------------------------------------------------------------------*/
+/** @brief Start an A/D Conversion
+
+@param[in] adc: uint8_t A/D converter number.
+*/
+
+void startAdcConversion(uint8_t adc)
+{
+    if (adc == 0)
+        adc_start_conversion_regular(ADC1);
+}
+
+/*--------------------------------------------------------------------------*/
 /** @brief Disable Global interrupts
 */
 

@@ -22,9 +22,6 @@ K. Sarkies, 10 December 2016
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
-#include <stdbool.h>
-
 #include "ff.h"
 #include "file.h"
 #include "buffer.h"

@@ -44,13 +44,6 @@ Initial 23 November 2016
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <libopencm3/stm32/rcc.h>
-#include <libopencm3/stm32/adc.h>
-#include <libopencm3/stm32/gpio.h>
-#include <libopencm3/stm32/dma.h>
-#include <libopencm3/stm32/timer.h>
-#include <libopencm3/stm32/usart.h>
-#include <libopencm3/cm3/nvic.h>
 #include "../libs/buffer.h"
 #include "../libs/hardware.h"
 #include "../libs/comms.h"
@@ -92,6 +85,7 @@ int main(void)
 {
     setGlobalDefaults();
     hardwareInit();
+    init_comms_buffers();
 
     uint8_t channel_array[NUM_CHANNEL];
     channel_array[0] = ADC_CHANNEL_0;
@@ -107,15 +101,12 @@ int main(void)
     channel_array[10] = ADC_CHANNEL_10;
     channel_array[11] = ADC_CHANNEL_11;
     channel_array[12] = ADC_CHANNEL_TEMPERATURE;
-    adc_set_regular_sequence(ADC1, NUM_CHANNEL, channel_array);
+    setAdcChannelSequence(0, NUM_CHANNEL, channel_array);
 
     uint16_t i = 0;
     uint32_t avg[NUM_CHANNEL];
 
     setDelayCount(configData.config.measurementInterval);
-
-    usart1_setup();
-    init_comms_buffers();
 
     init_file_system();
     writeFileHandle = 0xFF;
@@ -172,7 +163,7 @@ int main(void)
             for (sample = 0; sample < numSamples; sample++)
             {
 /* Start conversion and wait for conversion end. */
-	            adc_start_conversion_regular(ADC1);
+                startAdcConversion(0);
                 while (! adcEOC());
                 for (i = 0; i < NUM_CHANNEL; i++)
 	            {

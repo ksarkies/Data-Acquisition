@@ -25,10 +25,11 @@ data types defined.
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdint.h>
+#include <stdbool.h>
+
 #ifndef BUFFER_H
 #define BUFFER_H
-
-#include <libopencm3/cm3/common.h>
 
 void buffer_init(uint8_t buffer[], uint8_t size);
 uint16_t buffer_get(uint8_t buffer[]);

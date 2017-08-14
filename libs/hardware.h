@@ -30,6 +30,7 @@ K. Sarkies, 5 August 2017
 #define _HARDWARE_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #if (BOARD==BMS)
 #include "hardware-bms.h"
@@ -46,6 +47,8 @@ K. Sarkies, 5 August 2017
 /*--------------------------------------------------------------------------*/
 
 void hardwareInit(void);
+void setAdcChannelSequence(uint8_t adc, uint8_t numberChannels, uint8_t* channelArray);
+void startAdcConversion(uint8_t adc);
 void cli(void);
 void sei(void);
 void commsEnableTxInterrupt(uint8_t enable);
