@@ -32,7 +32,6 @@ K. Sarkies, 9 December 2016
 #include "buffer.h"
 #include "hardware.h"
 #include "comms.h"
-#include "../data-acquisition-firmware/data-acquisition-objdic.h"
 
 /* Local Prototypes */
 
@@ -113,15 +112,12 @@ The response parameters are converted to ASCII integer.
 
 void dataMessageSend(char* ident, int32_t param1, int32_t param2)
 {
-    if (configData.config.measurementSend)
-    {
-        commsPrintString(ident);
-        commsPrintString(",");
-        commsPrintInt(param1);
-        commsPrintString(",");
-        commsPrintInt(param2);
-        commsPrintString("\r\n");
-    }
+    commsPrintString(ident);
+    commsPrintString(",");
+    commsPrintInt(param1);
+    commsPrintString(",");
+    commsPrintInt(param2);
+    commsPrintString("\r\n");
 }
 
 /*--------------------------------------------------------------------------*/
@@ -135,13 +131,10 @@ Use to send a simple response to a command.
 
 void sendResponse(char* ident, int32_t parameter)
 {
-    if (configData.config.measurementSend)
-    {
-        commsPrintString(ident);
-        commsPrintString(",");
-        commsPrintInt(parameter);
-        commsPrintString("\r\n");
-    }
+    commsPrintString(ident);
+    commsPrintString(",");
+    commsPrintInt(parameter);
+    commsPrintString("\r\n");
 }
 
 /*--------------------------------------------------------------------------*/
@@ -155,7 +148,7 @@ Use to send a simple debug response to a command.
 
 void sendDebugResponse(char* ident, int32_t parameter)
 {
-    if ((ident[0] == 'D') && configData.config.debugMessageSend)
+    if (ident[0] == 'D')
     {
         commsPrintString(ident);
         commsPrintString(",");
@@ -175,13 +168,10 @@ Use to send a single string.
 
 void sendString(char* ident, char* string)
 {
-    if (configData.config.measurementSend)
-    {
-        commsPrintString(ident);
-        commsPrintString(",");
-        commsPrintString(string);
-        commsPrintString("\r\n");
-    }
+    commsPrintString(ident);
+    commsPrintString(",");
+    commsPrintString(string);
+    commsPrintString("\r\n");
 }
 
 /*--------------------------------------------------------------------------*/
@@ -260,12 +250,9 @@ Blocks if there is no space left on the queue.
 
 void commsPrintChar(char* ch)
 {
-    if (configData.config.enableSend)
-    {
-        commsEnableTxInterrupt(false);
-        while (buffer_put(send_buffer, *ch) == 0x100);
-        commsEnableTxInterrupt(true);
-    }
+    commsEnableTxInterrupt(false);
+    while (buffer_put(send_buffer, *ch) == 0x100);
+    commsEnableTxInterrupt(true);
 }
 
 /*--------------------------------------------------------------------------*/
