@@ -420,9 +420,11 @@ bool DataProcessingGui::combineRecords(QDateTime startTime, QDateTime endTime,
         outStream << "\n\r";
     }
     QDateTime time = startTime;
+    QDateTime lastTime = startTime;
+    int timeStep = DataProcessingMainUi.timeCorrectionSpinBox->value();
     while (! inStream.atEnd())
     {
-        if  (time > endTime) break;
+        if  ((time > endTime) && (endTime > startTime)) break;
       	QString lineIn = inStream.readLine();
         if (lineIn.size() <= 1) break;
         QStringList breakdown = lineIn.split(",");
@@ -448,7 +450,10 @@ bool DataProcessingGui::combineRecords(QDateTime startTime, QDateTime endTime,
 // Find and extract the time record
             if (firstText == "pH")
             {
+                lastTime = time;
                 time = QDateTime::fromString(breakdown[1].simplified(),Qt::ISODate);
+                if (time < lastTime)    // Attempt to correct for faulty time
+                    time = lastTime.addSecs(timeStep);
                 if ((blockStart) && (time > startTime))
                 {
                     outStream << timeRecord << ",";
@@ -468,7 +473,7 @@ bool DataProcessingGui::combineRecords(QDateTime startTime, QDateTime endTime,
                     outStream << switches << ",";
                     outStream << "\n\r";
                 }
-                timeRecord = breakdown[1].simplified();
+                timeRecord = time.toString(Qt::ISODate);
                 blockStart = true;
             }
             if (firstText == "dB1")

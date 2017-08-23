@@ -288,6 +288,38 @@
      <string/>
     </property>
    </widget>
+   <widget class="QSpinBox" name="timeCorrectionSpinBox">
+    <property name="geometry">
+     <rect>
+      <x>138</x>
+      <y>100</y>
+      <width>85</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>If time is to be corrected, add this value to last valid time.</string>
+    </property>
+    <property name="maximum">
+     <number>60</number>
+    </property>
+    <property name="value">
+     <number>1</number>
+    </property>
+   </widget>
+   <widget class="QLabel" name="timeCorrectionLabel">
+    <property name="geometry">
+     <rect>
+      <x>246</x>
+      <y>110</y>
+      <width>129</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Time Correction step</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -295,7 +327,7 @@
      <x>0</x>
      <y>0</y>
      <width>747</width>
-     <height>27</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
