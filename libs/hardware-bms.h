@@ -40,7 +40,7 @@ Initial 19 December 2016
 #define RTC_SOURCE RTC
 
 /* Size of communications receive and transmit buffers. */
-#define BUFFER_SIZE 128
+#define BUFFER_SIZE 250
 
 /* Number of A/D converter channels available (STM32F103) */
 #define NUM_DEVICES     3

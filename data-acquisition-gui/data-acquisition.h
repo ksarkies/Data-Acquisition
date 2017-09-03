@@ -96,10 +96,10 @@ private:
     QFile* outFile;
     QTime tick;
     long testTime;
-    long timeElapsed;
+    long testTimeElapsed;
+    long secondsElapsed;
     int voltageLimit;
     int testType;
-    bool testRunning;
 };
 
 #endif

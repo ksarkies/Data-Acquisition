@@ -83,7 +83,6 @@ DataAcquisitionGui::DataAcquisitionGui(QString device, uint parameter,
         port->write("aP\n\r");
     }
     on_manualButton_clicked();
-    testRunning = false;
 }
 
 DataAcquisitionGui::~DataAcquisitionGui()
@@ -109,7 +108,10 @@ void DataAcquisitionGui::initMainWindow(Ui::DataAcquisitionMainDialog mainWindow
     mainWindow.baudrateComboBox->show();
     mainWindow.baudrateComboBox->raise();
     DataAcquisitionMainUi.testTimeToGo->setVisible(false);
-    DataAcquisitionMainUi.timeElapsed->setText("00 00:00:00");
+    DataAcquisitionMainUi.testTimeElapsed->setVisible(true);
+    DataAcquisitionMainUi.testTimeElapsed->setText("00 00:00:00");
+    DataAcquisitionMainUi.totalTimeElapsed->setVisible(true);
+    DataAcquisitionMainUi.totalTimeElapsed->setText("00 00:00:00");
 }
 
 /*---------------------------------------------------------------------------*/
@@ -211,7 +213,7 @@ qDebug() << response;
             DataAcquisitionMainUi.durationSpinBox->setVisible(true);
             DataAcquisitionMainUi.durationLabel->setVisible(true);
             DataAcquisitionMainUi.testTimeToGo->setMaximum(testTime);
-            DataAcquisitionMainUi.testTimeToGo->setValue(testTime-timeElapsed);
+            DataAcquisitionMainUi.testTimeToGo->setValue(testTime);
             DataAcquisitionMainUi.testTimeToGo->setMinimum(0);
             DataAcquisitionMainUi.testTimeToGo->setVisible(true);
         }
@@ -228,12 +230,12 @@ qDebug() << response;
     {
         if (size > 1)
         {
-            long timeElapsed = secondField.toInt();
-            int seconds = timeElapsed % 60;
-            int minutes = (timeElapsed/60) % 60;
-            int hours = (timeElapsed/3600) % 24;
-            int days = (timeElapsed/(3600*24));
-            QString qTimeElapsed = QString("%1 %2:%3:%4")
+            long testTimeElapsed = secondField.toInt();
+            int seconds = testTimeElapsed % 60;
+            int minutes = (testTimeElapsed/60) % 60;
+            int hours = (testTimeElapsed/3600) % 24;
+            int days = (testTimeElapsed/(3600*24));
+            QString qtestTimeElapsed = QString("%1 %2:%3:%4")
                     .arg(days,2,10,QLatin1Char('0'))
                     .arg(hours,2,10,QLatin1Char('0'))
                     .arg(minutes,2,10,QLatin1Char('0'))
@@ -241,11 +243,31 @@ qDebug() << response;
             if ((testType == 2) && (testTime > 0))
             {
                 DataAcquisitionMainUi.testTimeToGo->setVisible(true);
-                DataAcquisitionMainUi.testTimeToGo->setValue(testTime-timeElapsed);
+                DataAcquisitionMainUi.testTimeToGo->setValue(testTime-testTimeElapsed);
             }
-            DataAcquisitionMainUi.timeElapsed->setText(qTimeElapsed);
+            DataAcquisitionMainUi.testTimeElapsed->setText(qtestTimeElapsed);
         }
     }
+
+/* Test time information. */
+    if ((size > 0) && (firstField == "dr"))
+    {
+        if (size > 1)
+        {
+            long secondsElapsed = secondField.toInt();
+            int seconds = secondsElapsed % 60;
+            int minutes = (secondsElapsed/60) % 60;
+            int hours = (secondsElapsed/3600) % 24;
+            int days = (secondsElapsed/(3600*24));
+            QString qsecondsElapsed = QString("%1 %2:%3:%4")
+                    .arg(days,2,10,QLatin1Char('0'))
+                    .arg(hours,2,10,QLatin1Char('0'))
+                    .arg(minutes,2,10,QLatin1Char('0'))
+                    .arg(seconds,2,10,QLatin1Char('0'));
+            DataAcquisitionMainUi.totalTimeElapsed->setText(qsecondsElapsed);
+        }
+    }
+
 /* Interpret test running status. */
     if ((size > 0) && (firstField == "dX"))
     {
@@ -723,7 +745,11 @@ void DataAcquisitionGui::on_startButton_clicked()
     }
     else
         DataAcquisitionMainUi.testTimeToGo->setVisible(false);
-    DataAcquisitionMainUi.timeElapsed->setText("00 00:00:00");
+    DataAcquisitionMainUi.testTimeElapsed->setVisible(true);
+    DataAcquisitionMainUi.testTimeElapsed->setText("00 00:00:00");
+    DataAcquisitionMainUi.totalTimeElapsed->setVisible(true);
+    DataAcquisitionMainUi.totalTimeElapsed->setText("00 00:00:00");
+    secondsElapsed = 0;
     DataAcquisitionMainUi.startButton->
         setStyleSheet("background-color:orange;");
     int interfaces = activeInterfaces();

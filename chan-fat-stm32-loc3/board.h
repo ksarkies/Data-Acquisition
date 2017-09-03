@@ -83,18 +83,18 @@ Check port settings against those set in the board.h header.
  #define SPI_BaudRatePrescaler_slow    SPI_CR1_BR_FPCLK_DIV_256
 
 #elif defined USE_ET_STAMP_STM32
-/* GPIO WP and CP not used, B12 is CS, B13 is SCK, B14 is MISO, B15 is MOSI */
+/* GPIO WP not used, D2 is CP, B12 is CS, B13 is SCK, B14 is MISO, B15 is MOSI */
  #define CARD_SUPPLY_SWITCHABLE   FALSE
  #define SOCKET_WP_CONNECTED      FALSE /* write-protect socket-switch */
- #define SOCKET_CP_CONNECTED      FALSE /* card-present socket-switch (clashes with USART1) */
- #define GPIO_PORT_WP             GPIOB
+ #define SOCKET_CP_CONNECTED      FALSE /* card-present socket-switch */
  #define RCC_GPIO                 RCC_APB2ENR
- #define RCC_GPIO_PORT_WP         RCC_APB2ENR_IOPBEN
- #define GPIOWP                   GPIO11
- #define GPIO_MODE_WP             GPIO_CNF_INPUT_FLOAT /* external resistor */
- #define GPIO_PORT_CP             GPIOB
- #define RCC_GPIO_PORT_CP         RCC_APB2ENR_IOPBEN
- #define GPIOCP                   GPIO10
+// #define GPIO_PORT_WP             GPIOB
+// #define RCC_GPIO_PORT_WP         RCC_APB2ENR_IOPBEN
+// #define GPIOWP                   GPIO11
+// #define GPIO_MODE_WP             GPIO_CNF_INPUT_FLOAT /* external resistor */
+ #define GPIO_PORT_CP             GPIOD
+ #define RCC_GPIO_PORT_CP         RCC_APB2ENR_IOPDEN
+ #define GPIOCP                   GPIO2
  #define GPIO_MODE_CP             GPIO_CNF_INPUT_FLOAT /* external resistor */
  #define GPIO_PORT_CS             GPIOB
  #define RCC_GPIO_PORT_CS         RCC_APB2ENR_IOPBEN

@@ -68,9 +68,11 @@ static uint8_t testType;
 static uint32_t voltageLimit;
 static uint32_t timeLimit;
 static uint32_t timeElapsed;
+static uint32_t secondsElapsed;
 static uint8_t device;
 static uint8_t setting;
 static bool testRunning;
+static bool testStarted;
 static int32_t current[NUM_INTERFACES];
 static uint64_t voltage[NUM_INTERFACES];
 
@@ -121,9 +123,11 @@ int main(void)
     voltageLimit = 0;
     timeLimit = 0;
     timeElapsed = 0;
+    secondsElapsed = 0;
     device = 0;
     setting = 0;
     testRunning = false;
+    testStarted = false;
 
 /* Main event loop */
 	while (1)
@@ -207,6 +211,7 @@ source. */
 /* Send out running test information. This is always sent during a test
 run even if no time limit has been set to indicate an active test run. */
             if (testRunning) sendResponse("dR",timeElapsed);
+            if (testStarted) sendResponse("dr",secondsElapsed);
             sendResponse("dX",testRunning);
         }
 	}
@@ -259,7 +264,11 @@ load/panel). */
         case 'G':
             {
                 if ((testType > 0) && (testType < 4) && (voltageLimit > 0))
+                {
+                    testStarted = true;
+                    secondsElapsed = 0;
                     testRunning = true;
+                }
                 break;
             }
 /* X Test run - Manual Stop. Turn off all load/source interfaces. */
@@ -584,6 +593,8 @@ void timer_proc(void)
     if (secondsTimer++ > 100)
     {
         secondsTimer = 0;
+        if (testStarted)
+            secondsElapsed++;
         if (testRunning)
         {
             timeElapsed++;

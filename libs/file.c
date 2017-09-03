@@ -327,7 +327,7 @@ uint8_t read_block_from_file(uint8_t fileHandle, uint8_t* blockLength, uint8_t* 
 {
     FRESULT fileStatus = FR_OK;
     UINT numRead = 0;
-    if (*blockLength < 82)
+    if ((*blockLength < 82) && (valid_file_handle(fileHandle)))
         fileStatus = f_read(&file[fileHandle],data,*blockLength,&numRead);
     else fileStatus = FR_INVALID_PARAMETER;
     *blockLength = numRead;
@@ -399,7 +399,7 @@ uint8_t write_to_file(uint8_t fileHandle, uint8_t* blockLength, uint8_t* data)
 {
     FRESULT fileStatus = FR_OK;
     UINT numWritten = 0;
-    if (*blockLength < 82)
+    if ((*blockLength < 82) && (valid_file_handle(fileHandle)))
     {
         fileStatus = f_write(&file[fileHandle],data,*blockLength,&numWritten);
         if (numWritten != *blockLength)
@@ -498,7 +498,7 @@ static uint8_t find_file_handle(void)
 The file handle map consists of bits set when a handle has been allocated.
 This function checks if the file handle refers to an open file.
 
-@param fileHandle: uint8_t the handle for the file to be deleted.
+@param fileHandle: uint8_t the handle for the file.
 */
 
 bool valid_file_handle(uint8_t fileHandle)

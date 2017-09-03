@@ -419,7 +419,7 @@ one has been received.
 
 void DataAcquisitionRecordGui::refreshDirectory()
 {
-qDebug() << "Ref Dir";
+qDebug() << "Refresh Directory";
     model->clear();
     socket->write("fd/\n\r");
 }

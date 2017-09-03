@@ -167,7 +167,7 @@ static void interface_speed( enum speed_setting speed )
 
 static void socket_wp_init(void)
 {
-	/* Configure I/O for write-protect */
+/* Configure I/O for write-protect */
     rcc_peripheral_enable_clock(&RCC_APB2ENR,RCC_GPIO_PORT_WP);
     gpio_set_mode(GPIO_PORT_WP,GPIO_MODE_INPUT,GPIO_CNF_INPUT_PULL_UPDOWN,GPIOWP);
     gpio_set(GPIO_PORT_WP,GPIOWP);
