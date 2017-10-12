@@ -77,11 +77,11 @@ extern void disk_timerproc();
 Basic setup of hardware.
 */
 
-void hardwareInit(void)
+void hardware_init(void)
 {
     clock_setup();
     gpio_setup();
-    systickSetup();
+    systick_setup();
     rtc_setup();
     dma_adc_setup();
     adc_setup();
@@ -99,7 +99,7 @@ results.
 @param[in] channelArray: uint8_t* Array to receive the conversion results.
 */
 
-void setAdcChannelSequence(uint8_t adc, uint8_t numberChannels, uint8_t* channelArray)
+void set_adc_channel_sequence(uint8_t adc, uint8_t numberChannels, uint8_t* channelArray)
 {
     if (adc == 0)
         adc_set_regular_sequence(ADC1, numberChannels, channelArray);
@@ -111,7 +111,7 @@ void setAdcChannelSequence(uint8_t adc, uint8_t numberChannels, uint8_t* channel
 @param[in] adc: uint8_t A/D converter number.
 */
 
-void startAdcConversion(uint8_t adc)
+void start_adc_conversion(uint8_t adc)
 {
     if (adc == 0)
         adc_start_conversion_regular(ADC1);
@@ -141,7 +141,7 @@ void sei(void)
 @param[in] enable: uint8_t true to enable the interrupt, false to disable.
 */
 
-void commsEnableTxInterrupt(uint8_t enable)
+void comms_enable_tx_interrupt(uint8_t enable)
 {
     if (enable) usart_enable_tx_interrupt(USART1);
     else usart_disable_tx_interrupt(USART1);
@@ -157,7 +157,7 @@ Adapted from code by Damian Miller.
 @param[in] size: uint16_t length of data block
 */
 
-void flashReadData(uint32_t *flashBlock, uint8_t *dataBlock, uint16_t size)
+void flash_read_data(uint32_t *flashBlock, uint8_t *dataBlock, uint16_t size)
 {
     uint16_t n;
     uint32_t *flashAddress= flashBlock;
@@ -181,7 +181,7 @@ Adapted from code by Damian Miller.
 bit 2: programming error, bit 4: write protect error, bit 7 compare fail.
 */
 
-uint32_t flashWriteData(uint32_t *flashBlock, uint8_t *dataBlock, uint16_t size)
+uint32_t flash_write_data(uint32_t *flashBlock, uint8_t *dataBlock, uint16_t size)
 {
     uint16_t n;
 
@@ -229,7 +229,7 @@ uint32_t flashWriteData(uint32_t *flashBlock, uint8_t *dataBlock, uint16_t size)
 @returns uint32_t Milliseconds counter value.
 */
 
-uint32_t getMilliSecondsCount()
+uint32_t get_milliseconds_count()
 {
     return millisecondsCount;
 }
@@ -240,7 +240,7 @@ uint32_t getMilliSecondsCount()
 @returns uint32_t seconds counter value.
 */
 
-uint32_t getSecondsCount()
+uint32_t get_seconds_count()
 {
 #if (RTC_SOURCE == RTC)
     return rtc_get_counter_val();
@@ -255,7 +255,7 @@ uint32_t getSecondsCount()
 @param[in] time: uint32_t seconds counter value to set.
 */
 
-void setSecondsCount(uint32_t time)
+void set_seconds_count(uint32_t time)
 {
 #if (RTC_SOURCE == RTC)
     rtc_set_counter_val(time);
@@ -270,7 +270,7 @@ void setSecondsCount(uint32_t time)
 @returns uint32_t counter value in milliseconds.
 */
 
-uint32_t getDelayCount()
+uint32_t get_delay_count()
 {
     return downCount;
 }
@@ -281,7 +281,7 @@ uint32_t getDelayCount()
 @param[in] time: uint32_t seconds counter value in milliseconds to set.
 */
 
-void setDelayCount(uint32_t time)
+void set_delay_count(uint32_t time)
 {
     downCount = time;
 }
@@ -296,7 +296,7 @@ take place).
 @returns uint8_t boolean true if the flag was set; false otherwise.
 */
 
-uint8_t adcEOC(void)
+bool adc_eoc_is_set(void)
 {
     if (adceoc)
     {
@@ -315,7 +315,7 @@ Note the channel must be less than the number of channels in the A/D converter.
 @returns uint32_t last value measured by the A/D converter.
 */
 
-uint32_t adcValue(uint8_t channel)
+uint32_t adc_value(uint8_t channel)
 {
     if (channel > NUM_CHANNEL) return 0;
     return v[channel];
@@ -334,7 +334,7 @@ This function provides a common interface if different hardware is used.
 @param[in] setting: uint8_t load (0-1), source 2.
 */
 
-void setSwitch(uint8_t device, uint8_t setting)
+void set_switch(uint8_t device, uint8_t setting)
 {
     uint16_t switchControl = gpio_port_read(SWITCH_CONTROL_PORT);
     uint16_t switchControlBits = ((switchControl >> SWITCH_CONTROL_SHIFT) & 0x3F);
@@ -362,7 +362,7 @@ connected.
 @returns uint8_t: the switch settings from the relevant port.
 */
 
-uint8_t getSwitchControlBits(void)
+uint8_t get_switch_control_bits(void)
 {
     return ((gpio_port_read(SWITCH_CONTROL_PORT) >> SWITCH_CONTROL_SHIFT) & 0x3F);
 }
@@ -378,7 +378,7 @@ to complete the interrupt process.
 source.
 */
 
-void overCurrentReset(uint32_t interface)
+void overcurrent_reset(uint32_t interface)
 {
     uint32_t port = 0;
     uint16_t bit = 0;
@@ -418,7 +418,7 @@ void overCurrentReset(uint32_t interface)
 @param[in] interface: uint32_t interface 0-5, being batteries 1-3, loads 1-2, module.
 */
 
-void overCurrentRelease(uint32_t interface)
+void overcurrent_release(uint32_t interface)
 {
     uint32_t port = 0;
     uint16_t bit = 0;
@@ -465,7 +465,7 @@ use.
 @param[in] settings: uint8_t the switch settings from the relevant port.
 */
 
-void setSwitchControlBits(uint8_t settings)
+void set_switch_control_bits(uint8_t settings)
 {
     uint16_t switchControl = gpio_port_read(SWITCH_CONTROL_PORT);
     switchControl &= ~(0x3F << SWITCH_CONTROL_SHIFT);
@@ -558,7 +558,7 @@ Setup SysTick Timer for 1 millisecond interrupts, also enables Systick and
 Systick-Interrupt.
 */
 
-void systickSetup(void)
+void systick_setup(void)
 {
 /* Set clock source to be the CPU clock prescaled by 8.
 for STM32F103 this is 72MHz / 8 => 9,000,000 counts per second */

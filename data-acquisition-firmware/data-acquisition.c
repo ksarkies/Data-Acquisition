@@ -77,7 +77,7 @@ static int32_t current[NUM_INTERFACES];
 static uint64_t voltage[NUM_INTERFACES];
 
 /* These configuration variables are part of the Object Dictionary. */
-/* This is defined in power-management-objdic and is updated in response to
+/* This is defined in data-acquisition-objdic and is updated in response to
 received messages. */
 extern union ConfigGroup configData;
 
@@ -85,8 +85,8 @@ extern union ConfigGroup configData;
 
 int main(void)
 {
-    setGlobalDefaults();
-    hardwareInit();
+    set_global_defaults();
+    hardware_init();
     init_comms_buffers();
 
     uint8_t channel_array[NUM_CHANNEL];
@@ -103,12 +103,12 @@ int main(void)
     channel_array[10] = ADC_CHANNEL_10;
     channel_array[11] = ADC_CHANNEL_11;
     channel_array[12] = ADC_CHANNEL_TEMPERATURE;
-    setAdcChannelSequence(0, NUM_CHANNEL, channel_array);
+    set_adc_channel_sequence(0, NUM_CHANNEL, channel_array);
 
     uint16_t i = 0;
     uint32_t avg[NUM_CHANNEL];
 
-    setDelayCount(configData.config.measurementInterval);
+    set_delay_count(configData.config.measurementInterval);
 
     init_file_system();
     writeFileHandle = 0xFF;
@@ -148,10 +148,10 @@ int main(void)
             }
             else line[characterPosition++] = character;
         }
-        if (getDelayCount() > 0xFFFFFF) setDelayCount(configData.config.measurementInterval);
+        if (get_delay_count() > 0xFFFFFF) set_delay_count(configData.config.measurementInterval);
 
 /* -------- Measurements --------- */
-        if (getDelayCount() == 0)
+        if (get_delay_count() == 0)
         {
 
 /* Clear stats and setup array of selected channels for conversion */
@@ -167,11 +167,11 @@ int main(void)
             for (sample = 0; sample < numSamples; sample++)
             {
 /* Start conversion and wait for conversion end. */
-                startAdcConversion(0);
-                while (! adcEOC());
+                start_adc_conversion(0);
+                while (! adc_eoc_is_set()) {}
                 for (i = 0; i < NUM_CHANNEL; i++)
 	            {
-                    avg[i] += adcValue(i);
+                    avg[i] += adc_value(i);
 	            }
             }
             int16_t temperature = ((avg[12]/numSamples-TEMPERATURE_OFFSET)
@@ -187,12 +187,12 @@ int main(void)
 /* ------------- Transmit and save to file -----------*/
 /* Send out a time string */
             char timeString[20];
-            putTimeToString(timeString);
-            sendString("pH",timeString);
-            recordString("pH",timeString,writeFileHandle);
+            put_time_to_string(timeString);
+            send_string("pH",timeString);
+            if (is_recording()) record_string("pH",timeString,writeFileHandle);
 /* Send out temperature measurement. */
-            sendResponse("dT",temperature);
-            recordSingle("dT",temperature,writeFileHandle);
+            send_response("dT",temperature);
+            if (is_recording()) record_single("dT",temperature,writeFileHandle);
 /* Send off accumulated data as dBx where x is 0-5 for devices 1-3, loads 1-2,
 source. */
             char id[4];
@@ -202,17 +202,17 @@ source. */
             for (i=0; i < numInterfaces; i++)
             {
                 id[2] = '1'+i;
-                dataMessageSend(id, current[i], voltage[i]);
-                recordDual(id, current[i], voltage[i], writeFileHandle);
+                data_message_send(id, current[i], voltage[i]);
+                if (is_recording()) record_dual(id, current[i], voltage[i], writeFileHandle);
             }
 /* Send out switch status */
-            sendResponse("ds",(int)getSwitchControlBits());
-            recordSingle("ds",(int)getSwitchControlBits(),writeFileHandle);
+            send_response("ds",(int)get_switch_control_bits());
+            if (is_recording()) record_single("ds",(int)get_switch_control_bits(),writeFileHandle);
 /* Send out running test information. This is always sent during a test
 run even if no time limit has been set to indicate an active test run. */
-            if (testRunning) sendResponse("dR",timeElapsed);
-            if (testStarted) sendResponse("dr",secondsElapsed);
-            sendResponse("dX",testRunning);
+            if (testRunning) send_response("dR",timeElapsed);
+            if (testStarted) send_response("dr",secondsElapsed);
+            send_response("dX",testRunning);
         }
 	}
 
@@ -250,14 +250,14 @@ load/panel). */
                 device = line[2]-'0';
                 setting = line[3]-'0'-1;
                 if ((device > 0) && (device <= NUM_DEVICES) && (setting < 3))
-                    setSwitch(device, setting);
+                    set_switch(device, setting);
                 break;
             }
 /* Request preset test parameters to be sent back. */
         case 'P':
             {
-                dataMessageSend("dP",testType,timeLimit);
-                sendResponse("dV",voltageLimit);
+                data_message_send("dP",testType,timeLimit);
+                send_response("dV",voltageLimit);
                 break;
             }
 /* This starts a test run if the testType has been correctly set. */
@@ -277,7 +277,7 @@ load/panel). */
                 uint8_t setting = 0;
                 for (setting=0; setting<NUM_LOADS+NUM_SOURCES; setting++)
                 {
-                    setSwitch(0, setting);
+                    set_switch(0, setting);
                 }
                 testRunning = false;
                 timeElapsed = 0;
@@ -292,7 +292,7 @@ being device 1-3, loads 1-2 and source. */
                 if (interface > NUM_INTERFACES-1) break;
                 if (interface > 0)
                 {
-                    overCurrentReset(interface);
+                    overcurrent_reset(interface);
                     resetTimer = 25;        /* Set to 250 ms */
                 }
                 break;
@@ -300,15 +300,15 @@ being device 1-3, loads 1-2 and source. */
 /* W Write the current configuration block to FLASH */
         case 'W':
             {
-                writeConfigBlock();
+                write_config_block();
                 break;
             }
 /* Request identification string with version sent back.  */
         case 'E':
             {
                 char ident[35] = "Data Acquisition System,";
-                stringAppend(ident,FIRMWARE_VERSION);
-                sendString("dE",ident);
+                string_append(ident,FIRMWARE_VERSION);
+                send_string("dE",ident);
                 break;
             }
         }
@@ -326,8 +326,8 @@ Return the internal time.
         case 'H':
             {
                 char timeString[20];
-                putTimeToString(timeString);
-                sendString("pH",timeString);
+                put_time_to_string(timeString);
+                send_string("pH",timeString);
             }
         }
     }
@@ -355,7 +355,7 @@ Parameter Setting Commands */
 /* Hxxxx Set time from an ISO 8601 formatted string. */
         case 'H':
             {
-                setTimeFromString((char*)line+2);
+                set_time_from_string((char*)line+2);
                 break;
             }
 /* M-, M+ Turn on/off data messaging (mainly for debug) */
@@ -376,13 +376,13 @@ Parameter Setting Commands */
 /* Tn Test run - Set Time limit n in seconds */
         case 'T':
             {
-                timeLimit = asciiToInt((char*)line+2);
+                timeLimit = ascii_to_int((char*)line+2);
                 break;
             }
 /* Vn Test run - Voltage limit n in volts times 256 */
         case 'V':
             {
-                voltageLimit = asciiToInt((char*)line+2);
+                voltageLimit = ascii_to_int((char*)line+2);
                 break;
             }
 /* Rn Test run - Start test with test type specified n = 1-3. */
@@ -421,8 +421,8 @@ Data is not written to the file externally. */
                 uint32_t freeClusters = 0;
                 uint32_t sectorsPerCluster = 0;
                 uint8_t fileStatus = get_free_clusters(&freeClusters, &sectorsPerCluster);
-                dataMessageSend("fF",freeClusters,sectorsPerCluster);
-                sendResponse("fE",(uint8_t)fileStatus);
+                data_message_send("fF",freeClusters,sectorsPerCluster);
+                send_response("fE",(uint8_t)fileStatus);
                 break;
             }
 /* d[d] Directory listing, d is the d=directory name. Get the first (if d
@@ -445,14 +445,14 @@ directory, then size and name are not sent back. The type character can be:
                 if (type != 'e')
                 {
                     char fileSize[5];
-                    hexToAscii((size >> 16) & 0xFFFF,fileSize);
-                    stringAppend(dirInfo,fileSize);
-                    hexToAscii(size & 0xFFFF,fileSize);
-                    stringAppend(dirInfo,fileSize);
-                    stringAppend(dirInfo,fileName);
+                    hex_to_ascii((size >> 16) & 0xFFFF,fileSize);
+                    string_append(dirInfo,fileSize);
+                    hex_to_ascii(size & 0xFFFF,fileSize);
+                    string_append(dirInfo,fileSize);
+                    string_append(dirInfo,fileName);
                 }
-                sendString("fd",dirInfo);
-                sendResponse("fE",(uint8_t)fileStatus);
+                send_string("fd",dirInfo);
+                send_response("fE",(uint8_t)fileStatus);
                 break;
             }
 /* Wf Open a file f=filename for writing less than 12 characters.
@@ -461,16 +461,16 @@ Returns a file handle. On error, file handle is 0xFF. */
             case 'W':
             {
                 if (! file_system_usable()) break;
-                if (stringLength((char*)line+2) < 12)
+                if (string_length((char*)line+2) < 12)
                 {
                     uint8_t fileStatus =
                         open_write_file((char*)line+2, &writeFileHandle);
                     if (fileStatus == 0)
                     {
-                        stringCopy(writeFileName,(char*)line+2);
-                        sendResponse("fW",writeFileHandle);
+                        string_copy(writeFileName,(char*)line+2);
+                        send_response("fW",writeFileHandle);
                     }
-                    sendResponse("fE",(uint8_t)fileStatus);
+                    send_response("fE",(uint8_t)fileStatus);
                 }
                 break;
             }
@@ -480,16 +480,16 @@ Returns a file handle. On error, file handle is 0xFF. */
             case 'R':
             {
                 if (! file_system_usable()) break;
-                if (stringLength((char*)line+2) < 12)
+                if (string_length((char*)line+2) < 12)
                 {
                     uint8_t fileStatus = 
                         open_read_file((char*)line+2, &readFileHandle);
                     if (fileStatus == 0)
                     {
-                        stringCopy(readFileName,(char*)line+2);
-                        sendResponse("fR",readFileHandle);
+                        string_copy(readFileName,(char*)line+2);
+                        send_response("fR",readFileHandle);
                     }
-                    sendResponse("fE",(uint8_t)fileStatus);
+                    send_response("fE",(uint8_t)fileStatus);
                 }
                 break;
             }
@@ -498,14 +498,14 @@ separated list. */
             case 'G':
             {
                 if (! file_system_usable()) break;
-                uint8_t fileHandle = asciiToInt((char*)line+2);
+                uint8_t fileHandle = ascii_to_int((char*)line+2);
                 if (valid_file_handle(fileHandle))
                 {
                     char string[80];
                     uint8_t fileStatus = 
                         read_line_from_file(fileHandle,string);
-                    sendString("fG",string);
-                    sendResponse("fE",(uint8_t)fileStatus);
+                    send_string("fG",string);
+                    send_response("fE",(uint8_t)fileStatus);
                 }
                 break;
             }
@@ -514,34 +514,34 @@ files, with open write filehandle and filename first followed by read filehandle
 and filename, or blank if any file is not open. */
             case 's':
             {
-                commsPrintString("fs,");
-                commsPrintInt((int)getControls());
-                commsPrintString(",");
+                comms_print_string("fs,");
+                comms_print_int((int)get_controls());
+                comms_print_string(",");
                 uint8_t writeStatus;
-                commsPrintInt(writeFileHandle);
-                commsPrintString(",");
+                comms_print_int(writeFileHandle);
+                comms_print_string(",");
                 if (writeFileHandle < 0xFF)
                 {
-                    commsPrintString(writeFileName);
-                    commsPrintString(",");
+                    comms_print_string(writeFileName);
+                    comms_print_string(",");
                 }
-                commsPrintInt(readFileHandle);
+                comms_print_int(readFileHandle);
                 if (readFileHandle < 0xFF)
                 {
-                    commsPrintString(",");
-                    commsPrintString(readFileName);
+                    comms_print_string(",");
+                    comms_print_string(readFileName);
                 }
-                commsPrintString("\r\n");
+                comms_print_string("\r\n");
                 break;
             }
 /* Cf Close File specified by f=file handle. */
             case 'C':
             {
                 if (! file_system_usable()) break;
-                uint8_t fileHandle = asciiToInt((char*)line+2);
+                uint8_t fileHandle = ascii_to_int((char*)line+2);
                 uint8_t fileStatus = close_file(&fileHandle);
                 if (fileStatus == 0) writeFileHandle = 0xFF;
-                sendResponse("fE",(uint8_t)fileStatus);
+                send_response("fE",(uint8_t)fileStatus);
                 break;
             }
 /* X Delete File. */
@@ -549,22 +549,22 @@ and filename, or blank if any file is not open. */
             {
                 if (! file_system_usable()) break;
                 uint8_t fileStatus = delete_file((char*)line+2);
-                sendResponse("fE",(uint8_t)fileStatus);
+                send_response("fE",(uint8_t)fileStatus);
                 break;
             }
 /* M Reinitialize the memory card. */
             case 'M':
             {
                 uint8_t fileStatus = init_file_system();
-                sendResponse("fE",(uint8_t)fileStatus);
+                send_response("fE",(uint8_t)fileStatus);
                 break;
             }
 /* Z Create a standard file system on the memory volume */
             case 'Z':
             {
-                sendString("D","Creating Filesystem");
+                send_string("D","Creating Filesystem");
                 uint8_t fileStatus = make_filesystem();
-                sendResponse("fE",(uint8_t)fileStatus);
+                send_response("fE",(uint8_t)fileStatus);
                 break;
             }
         }
@@ -586,7 +586,7 @@ void timer_proc(void)
 /* Handle timer for over current reset release */
     if ((interface > 0) && (resetTimer-- == 0))
     {
-        overCurrentRelease(interface);
+        overcurrent_release(interface);
         interface = 0;
     }
 /* handle timer and voltage checks for test runs every second */
@@ -603,7 +603,7 @@ void timer_proc(void)
             {
                 testRunning = false;
                 timeElapsed = 0;
-                setSwitch(0, setting);
+                set_switch(0, setting);
             }
         }
     }

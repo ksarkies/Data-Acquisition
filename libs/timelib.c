@@ -44,33 +44,33 @@ Convert the global time to an ISO 8601 string.
 @param[out] timeString char*. Returns pointer to string with formatted date.
 */
 
-void putTimeToString(char* timeString)
+void put_time_to_string(char* timeString)
 {
-    time_t currentTime = (time_t)getSecondsCount();
+    time_t currentTime = (time_t)get_seconds_count();
     struct tm *rtc = localtime(&currentTime);
 //    strftime(timeString, sizeof timeString, "%FT%TZ", rtc);
     char buffer[10];
-    intToAscii(rtc->tm_year+1900, timeString);
-    stringAppend(timeString,"-");
-    if (rtc->tm_mon < 9) stringAppend(timeString,"0");
-    intToAscii(rtc->tm_mon+1, buffer);
-    stringAppend(timeString,buffer);
-    stringAppend(timeString,"-");
-    if (rtc->tm_mday < 10) stringAppend(timeString,"0");
-    intToAscii(rtc->tm_mday, buffer);
-    stringAppend(timeString,buffer);
-    stringAppend(timeString,"T");
-    if (rtc->tm_hour < 10) stringAppend(timeString,"0");
-    intToAscii(rtc->tm_hour, buffer);
-    stringAppend(timeString,buffer);
-    stringAppend(timeString,":");
-    if (rtc->tm_min < 10) stringAppend(timeString,"0");
-    intToAscii(rtc->tm_min, buffer);
-    stringAppend(timeString,buffer);
-    stringAppend(timeString,":");
-    if (rtc->tm_sec < 10) stringAppend(timeString,"0");
-    intToAscii(rtc->tm_sec, buffer);
-    stringAppend(timeString,buffer);
+    int_to_ascii(rtc->tm_year+1900, timeString);
+    string_append(timeString,"-");
+    if (rtc->tm_mon < 9) string_append(timeString,"0");
+    int_to_ascii(rtc->tm_mon+1, buffer);
+    string_append(timeString,buffer);
+    string_append(timeString,"-");
+    if (rtc->tm_mday < 10) string_append(timeString,"0");
+    int_to_ascii(rtc->tm_mday, buffer);
+    string_append(timeString,buffer);
+    string_append(timeString,"T");
+    if (rtc->tm_hour < 10) string_append(timeString,"0");
+    int_to_ascii(rtc->tm_hour, buffer);
+    string_append(timeString,buffer);
+    string_append(timeString,":");
+    if (rtc->tm_min < 10) string_append(timeString,"0");
+    int_to_ascii(rtc->tm_min, buffer);
+    string_append(timeString,buffer);
+    string_append(timeString,":");
+    if (rtc->tm_sec < 10) string_append(timeString,"0");
+    int_to_ascii(rtc->tm_sec, buffer);
+    string_append(timeString,buffer);
 }
 
 /*--------------------------------------------------------------------------*/
@@ -79,7 +79,7 @@ void putTimeToString(char* timeString)
 @param[in] timeString: pointer to string with formatted date.
 */
 
-void setTimeFromString(char* timeString)
+void set_time_from_string(char* timeString)
 {
     struct tm newTime;
     char buffer[5];
@@ -87,20 +87,20 @@ void setTimeFromString(char* timeString)
 
     for (i=0; i<4; i++) buffer[i] = timeString[i];
     buffer[4] = 0;
-    newTime.tm_year = asciiToInt(buffer)-1900;
+    newTime.tm_year = ascii_to_int(buffer)-1900;
     for (i=0; i<2; i++) buffer[i] = timeString[i+5];
     buffer[2] = 0;
-    newTime.tm_mon = asciiToInt(buffer)-1;
+    newTime.tm_mon = ascii_to_int(buffer)-1;
     for (i=0; i<2; i++) buffer[i] = timeString[i+8];
-    newTime.tm_mday = asciiToInt(buffer);
+    newTime.tm_mday = ascii_to_int(buffer);
     for (i=0; i<2; i++) buffer[i] = timeString[i+11];
-    newTime.tm_hour = asciiToInt(buffer);
+    newTime.tm_hour = ascii_to_int(buffer);
     for (i=0; i<2; i++) buffer[i] = timeString[i+14];
-    newTime.tm_min = asciiToInt(buffer);
+    newTime.tm_min = ascii_to_int(buffer);
     for (i=0; i<2; i++) buffer[i] = timeString[i+17];
-    newTime.tm_sec = asciiToInt(buffer);
+    newTime.tm_sec = ascii_to_int(buffer);
 
-    setSecondsCount((uint32_t)mktime(&newTime));
+    set_seconds_count((uint32_t)mktime(&newTime));
 }
 
 /**@}*/

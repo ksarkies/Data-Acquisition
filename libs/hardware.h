@@ -46,24 +46,24 @@ K. Sarkies, 5 August 2017
 /* Prototypes */
 /*--------------------------------------------------------------------------*/
 
-void hardwareInit(void);
-void setAdcChannelSequence(uint8_t adc, uint8_t numberChannels, uint8_t* channelArray);
-void startAdcConversion(uint8_t adc);
+void hardware_init(void);
+void set_adc_channel_sequence(uint8_t adc, uint8_t numberChannels, uint8_t* channelArray);
+void start_adc_conversion(uint8_t adc);
 void cli(void);
 void sei(void);
-void commsEnableTxInterrupt(uint8_t enable);
-void flashReadData(uint32_t *flashBlock, uint8_t *dataBlock, uint16_t size);
-uint32_t flashWriteData(uint32_t *flashBlock, uint8_t *dataBlock, uint16_t size);
-uint32_t getMilliSecondsCount();
-uint32_t getSecondsCount();
-void setSecondsCount(uint32_t time);
-uint32_t getDelayCount();
-void setDelayCount(uint32_t time);
-uint8_t adcEOC(void);
-uint32_t adcValue(uint8_t channel);
+void comms_enable_tx_interrupt(uint8_t enable);
+void flash_read_data(uint32_t *flashBlock, uint8_t *dataBlock, uint16_t size);
+uint32_t flash_write_data(uint32_t *flashBlock, uint8_t *dataBlock, uint16_t size);
+uint32_t get_milliseconds_count();
+uint32_t get_seconds_count();
+void set_seconds_count(uint32_t time);
+uint32_t get_delay_count();
+void set_delay_count(uint32_t time);
+bool adc_eoc_is_set(void);
+uint32_t adc_value(uint8_t channel);
 void clock_setup(void);
 void gpio_setup(void);
-void systickSetup(void);
+void systick_setup(void);
 void adc_setup(void);
 void dma_adc_setup(void);
 void exti_setup(uint32_t exti_enables, uint32_t port);
@@ -71,11 +71,11 @@ void rtc_setup(void);
 void usart1_setup(void);
 void peripheral_enable(void);
 void peripheral_disable(void);
-void setSwitch(uint8_t device, uint8_t setting);
-uint8_t getSwitchControlBits(void);
-void setSwitchControlBits(uint8_t settings);
-void overCurrentReset(uint32_t interface);
-void overCurrentRelease(uint32_t interface);
+void set_switch(uint8_t device, uint8_t setting);
+uint8_t get_switch_control_bits(void);
+void set_switch_control_bits(uint8_t settings);
+void overcurrent_reset(uint32_t interface);
+void overcurrent_release(uint32_t interface);
 
 #endif
 

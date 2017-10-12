@@ -96,7 +96,7 @@ Offset is 2.732V at 0 degrees C over 3.280 times 4096. */
 /*--------------------------------------------------------------------------*/
 /****** Object Dictionary Items *******/
 /* Configuration items, updated externally, are stored to NVM */
-/* Values must be initialized in setGlobalDefaults(). */
+/* Values must be initialized in set_global_defaults(). */
 
 /*--------------------------------------------------------------------------*/
 struct Config
@@ -129,12 +129,10 @@ union ConfigGroup
 /* Prototypes */
 /*--------------------------------------------------------------------------*/
 
-void setGlobalDefaults(void);
-uint32_t writeConfigBlock(void);
-bool isRecording(void);
-uint16_t getControls(void);
-
-bool isRecording(void);
+void set_global_defaults(void);
+uint32_t write_config_block(void);
+bool is_recording(void);
+uint16_t get_controls(void);
 
 #endif
 
