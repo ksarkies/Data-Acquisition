@@ -47,6 +47,7 @@ Initial 23 November 2016
 #include "../libs/buffer.h"
 #include "../libs/hardware.h"
 #include "../libs/comms.h"
+#include "../libs/stringlib.h"
 #include "../libs/file.h"
 #include "../libs/timelib.h"
 #include "data-acquisition.h"

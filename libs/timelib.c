@@ -35,6 +35,7 @@ Initial 25 November 2013 from Battery Management System
 #include "hardware.h"
 #include "timelib.h"
 #include "comms.h"
+#include "stringlib.h"
 
 /*--------------------------------------------------------------------------*/
 /** @brief Return a string containing the time and date

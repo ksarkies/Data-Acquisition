@@ -27,6 +27,7 @@ K. Sarkies, 10 December 2016
 #include "buffer.h"
 #include "comms.h"
 #include "hardware.h"
+#include "stringlib.h"
 
 #define  _BV(bit) (1 << (bit))
 
