@@ -908,7 +908,7 @@
    <property name="geometry">
     <rect>
      <x>448</x>
-     <y>400</y>
+     <y>388</y>
      <width>52</width>
      <height>25</height>
     </rect>
@@ -921,7 +921,7 @@
    <property name="geometry">
     <rect>
      <x>432</x>
-     <y>380</y>
+     <y>368</y>
      <width>121</width>
      <height>17</height>
     </rect>
@@ -934,7 +934,7 @@
    <property name="geometry">
     <rect>
      <x>448</x>
-     <y>348</y>
+     <y>336</y>
      <width>62</width>
      <height>25</height>
     </rect>
@@ -1058,7 +1058,7 @@
    <property name="geometry">
     <rect>
      <x>424</x>
-     <y>432</y>
+     <y>420</y>
      <width>131</width>
      <height>17</height>
     </rect>
@@ -1070,8 +1070,8 @@
   <widget class="QProgressBar" name="testTimeToGo">
    <property name="geometry">
     <rect>
-     <x>424</x>
-     <y>492</y>
+     <x>416</x>
+     <y>496</y>
      <width>118</width>
      <height>17</height>
     </rect>
@@ -1080,17 +1080,69 @@
     <number>0</number>
    </property>
   </widget>
-  <widget class="QLabel" name="timeElapsed">
+  <widget class="QLabel" name="testTimeElapsed">
    <property name="geometry">
     <rect>
-     <x>436</x>
-     <y>456</y>
+     <x>420</x>
+     <y>440</y>
      <width>85</width>
      <height>25</height>
     </rect>
    </property>
    <property name="text">
     <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="timeToGoLabel">
+   <property name="geometry">
+    <rect>
+     <x>436</x>
+     <y>516</y>
+     <width>81</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Time to go</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="totalTimeElapsed">
+   <property name="geometry">
+    <rect>
+     <x>520</x>
+     <y>440</y>
+     <width>85</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="totalTimeElapsedLabel">
+   <property name="geometry">
+    <rect>
+     <x>524</x>
+     <y>472</y>
+     <width>89</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Total Time</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="testTimeElapsedLabel">
+   <property name="geometry">
+    <rect>
+     <x>416</x>
+     <y>472</y>
+     <width>89</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Time Elapsed</string>
    </property>
   </widget>
  </widget>
