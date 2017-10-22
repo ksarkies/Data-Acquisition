@@ -49,7 +49,6 @@ typedef bool BOOL;
 #include "ffconf.h"
 #include "diskio.h"
 #include "board.h"
-#include "comms.h"
 
 #ifdef STM32_SD_USE_DMA
 // #warning "Information only: using DMA"

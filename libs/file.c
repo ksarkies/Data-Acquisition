@@ -327,7 +327,7 @@ uint8_t read_block_from_file(uint8_t fileHandle, uint8_t* blockLength, uint8_t* 
 {
     FRESULT fileStatus = FR_OK;
     UINT numRead = 0;
-    if ((*blockLength < 82) && (valid_file_handle(fileHandle)))
+    if (*blockLength < 82)
         fileStatus = f_read(&file[fileHandle],data,*blockLength,&numRead);
     else fileStatus = FR_INVALID_PARAMETER;
     *blockLength = numRead;
@@ -399,7 +399,7 @@ uint8_t write_to_file(uint8_t fileHandle, uint8_t* blockLength, uint8_t* data)
 {
     FRESULT fileStatus = FR_OK;
     UINT numWritten = 0;
-    if ((*blockLength < 82) && (valid_file_handle(fileHandle)))
+    if (*blockLength < 82)
     {
         fileStatus = f_write(&file[fileHandle],data,*blockLength,&numWritten);
         if (numWritten != *blockLength)
@@ -498,7 +498,7 @@ static uint8_t find_file_handle(void)
 The file handle map consists of bits set when a handle has been allocated.
 This function checks if the file handle refers to an open file.
 
-@param fileHandle: uint8_t the handle for the file.
+@param fileHandle: uint8_t the handle for the file to be deleted.
 */
 
 bool valid_file_handle(uint8_t fileHandle)
@@ -612,4 +612,22 @@ uint8_t record_string(char* ident, char* string, uint8_t writeFileHandle)
     }
     return fileStatus;
 }
+
+/*--------------------------------------------------------------------------*/
+/* @brief Record a fixed point value in ASCII decimal form.
+
+Fixed point arithmetic based on 32 bit signed integer of which the first 8 bits
+are the fractional part.
+
+@param[in] param: 32 bit signed integer as uint32_t.
+*/
+
+uint8_t record_fixed_point(char* ident, int32_t param, uint8_t writeFileHandle)
+{
+    char buffer[32];
+    fixed_point_to_ascii(param,buffer);
+    uint8_t fileStatus = record_string(ident, buffer, writeFileHandle);
+    return fileStatus;
+}
+
 

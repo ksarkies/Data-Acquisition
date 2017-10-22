@@ -578,13 +578,6 @@ for STM32F103 this is 72MHz / 8 => 9,000,000 counts per second */
 /** @brief ADC Setup.
 
 ADC1 is turned on and calibrated.
-
-For A/D conversion on the STM32F103RET6 the A/D ports are:
-PA 0-7 is ADC 0-7
-PB 0-1 is ADC 8-9
-PC 0-5 is ADC 10-15
-
-@param[in] adc_inputs: uint32_t bit map of ports to be used (0-15).
 */
 
 void adc_setup(void)
@@ -801,24 +794,23 @@ void rtc_alarm_isr(void)
 /*-----------------------------------------------------------*/
 /** @brief Systick Interrupt Handler
 
-This updates the status of any inserted SD card every 10 ms.
-
 Can be used to provide a RTC.
 */
 void sys_tick_handler(void)
 {
     millisecondsCount++;
-/* SD card status update. */
+/* This updates the status of any inserted SD card every 10 ms. Also checks
+on other operations of the main program while the processor is awake. */
     if ((millisecondsCount % (10)) == 0)
     {
         disk_timerproc();       /* File System hardware checks */
         timer_proc();           /* test run and other checks */
     }
 
-/* updated every second if systick is used for the real-time clock. */
+/* updated every second in case systick is used for the real-time clock. */
     if ((millisecondsCount % 1000) == 0) secondsCount++;
 
-/* down counter for timing. */
+/* down counter for one-shot timer. */
     downCount--;
 }
 
@@ -843,7 +835,7 @@ void usart1_isr(void)
 	{
 /* If buffer empty, disable the tx interrupt */
 		data = get_from_send_buffer();
-		if ((data & 0xFF00) > 0) usart_disable_tx_interrupt(USART1);
+		if ((data & 0xFF00) > 0) comms_enable_tx_interrupt(false);
 		else usart_send(USART1, (data & 0xFF));
 	}
 }
@@ -859,7 +851,6 @@ variable.
 
 void adc1_2_isr(void)
 {
-	gpio_toggle(GPIOB, GPIO9);
     adceoc = true;
 /* Clear DMA to restart at beginning of data array */
 	dma_adc_setup();

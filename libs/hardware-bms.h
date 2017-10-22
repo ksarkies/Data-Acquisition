@@ -37,17 +37,8 @@ Initial 19 December 2016
 #include <stdbool.h>
 #include <stdint.h>
 
-#define RTC_SOURCE RTC
-
 /* Size of communications receive and transmit buffers. */
 #define BUFFER_SIZE 250
-
-/* Number of A/D converter channels available (STM32F103) */
-#define NUM_DEVICES     3
-#define NUM_LOADS       2
-#define NUM_SOURCES     1
-#define NUM_INTERFACES  6
-#define NUM_CHANNEL     1 + 2*NUM_INTERFACES
 
 /* Timer parameters */
 /* register value representing a PWM period of 50 microsec (5 kHz) */
@@ -66,8 +57,19 @@ Initial 19 December 2016
 /* RTC select hardware RTC or software counter */
 #define RTC_SOURCE      RTC
 
-/* A/D Converter Channels */
+/* Number of A/D converter channels available (STM32F103) */
+#define NUM_DEVICES     3
+#define NUM_LOADS       2
+#define NUM_SOURCES     1
+#define NUM_INTERFACES  6
+#define NUM_CHANNEL     1 + 2*NUM_INTERFACES
 
+/* For A/D conversion on the STM32F103RET6 the A/D ports are:
+PA 0-7 is ADC 0-7
+PB 0-1 is ADC 8-9
+PC 0-5 is ADC 10-15 */
+
+/*A/D Converter Channels */
 #define ADC_CHANNEL_0            0
 #define ADC_CHANNEL_1            1
 #define ADC_CHANNEL_2            2
@@ -81,6 +83,7 @@ Initial 19 December 2016
 #define ADC_CHANNEL_10           6
 #define ADC_CHANNEL_11           7
 #define ADC_CHANNEL_TEMPERATURE 14
+
 /* GPIO Port Settings */
 #define PA_ANALOGUE_INPUTS          GPIO0 | GPIO1 | GPIO2 | GPIO3 | GPIO4 |\
                                             GPIO5 | GPIO6 | GPIO7

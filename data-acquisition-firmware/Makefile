@@ -27,6 +27,7 @@ FATFSDIR        = ../chan-fat-stm32-loc3
 
 VPATH           += $(FATFSDIR)  $(LIBS_DIR)
 
+# Inclusion of header files
 INCLUDES	    = $(patsubst %,-I%,$(DRIVERS_INC) $(FATFSDIR) $(LIBS_DIR))
 
 CDEFS           += -DHSE_VALUE=$(F_XTAL)UL
@@ -49,7 +50,7 @@ LDFLAGS	        += -specs=nosys.specs
 
 # The libopencm3 library is assumed to exist in libopencm3/lib, otherwise add files here
 CFILES		    = $(PROJECT).c $(PROJECT)-objdic.c
-CFILES          += buffer.c hardware.c comms.c file.c timelib.c
+CFILES          += buffer.c hardware.c comms.c stringlib.c file.c timelib.c
 CFILES          += ff.c fattime.c sd_spi_loc3_stm32.c
 
 OBJS		    = $(CFILES:.c=.o)
