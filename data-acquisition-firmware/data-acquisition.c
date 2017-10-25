@@ -603,7 +603,6 @@ void timer_proc(void)
                 || (voltage[device-1] < voltageLimit))
             {
                 testRunning = false;
-                timeElapsed = 0;
                 set_switch(0, setting);
             }
         }
