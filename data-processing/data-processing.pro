@@ -2,6 +2,7 @@ PROJECT =       Data Processing GUI
 TEMPLATE =      app
 TARGET          += 
 DEPENDPATH      += .
+QT              += widgets
 
 QWT_ROOT        = /usr/local/qwt-6.1.3
 include( $${QWT_ROOT}/features/qwt.prf )

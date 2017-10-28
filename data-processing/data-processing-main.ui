@@ -33,9 +33,9 @@
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>240</x>
+      <x>180</x>
       <y>8</y>
-      <width>265</width>
+      <width>453</width>
       <height>41</height>
      </rect>
     </property>
@@ -45,7 +45,7 @@
      </font>
     </property>
     <property name="text">
-     <string>Data Processing Tool</string>
+     <string>Data Acquisition Data Processing Tool</string>
     </property>
    </widget>
    <widget class="QDateTimeEdit" name="startTime">
@@ -87,8 +87,8 @@
    <widget class="QFrame" name="plotFrame">
     <property name="geometry">
      <rect>
-      <x>5</x>
-      <y>465</y>
+      <x>16</x>
+      <y>432</y>
       <width>371</width>
       <height>131</height>
      </rect>
@@ -221,8 +221,8 @@
    <widget class="QFrame" name="dataAnalysisFrame">
     <property name="geometry">
      <rect>
-      <x>390</x>
-      <y>465</y>
+      <x>401</x>
+      <y>432</y>
       <width>321</width>
       <height>131</height>
      </rect>
@@ -327,7 +327,7 @@
      <x>0</x>
      <y>0</y>
      <width>747</width>
-     <height>26</height>
+     <height>27</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

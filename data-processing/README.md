@@ -6,18 +6,13 @@ csv records consisting of an ID and several fields of associated data.
 
 The program scans the file for start and end time, and extracts a list of
 record types. The user can then request a number of performance measures over
-a specified time interval:
+a specified time interval.
 
-To compile this program, ensure that QT4.8 is installed.
+To compile this program, ensure that QT5 is installed.
 
 make clean
-qmake-qt4
+qmake
 make
 
 (c) K. Sarkies 08/08/2017
-
-TODO
-
-1. Compile under QT5 or later.
-
 
