@@ -696,7 +696,7 @@ void rtc_setup(void)
 	rtc_auto_awake(RCC_LSE,0x7FFF);
 
 /* Clear the RTC counter - some counts will occur before prescale is set. */
-	rtc_set_counter_val(0);
+//	rtc_set_counter_val(0);
 
 /* Set the Alarm to trigger in interrupt mode on EXTI17 for wakeup */
 	nvic_enable_irq(NVIC_RTC_ALARM_IRQ);
