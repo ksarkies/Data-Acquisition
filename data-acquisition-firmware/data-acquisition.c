@@ -68,7 +68,7 @@ static uint8_t resetTimer;
 static uint8_t testType;
 static uint32_t voltageLimit;
 static uint32_t timeLimit;
-static uint32_t timeElapsed;
+static uint32_t runtimeElapsed;
 static uint32_t secondsElapsed;
 static uint8_t device;
 static uint8_t setting;
@@ -123,7 +123,7 @@ int main(void)
     testType = 0;
     voltageLimit = 0;
     timeLimit = 0;
-    timeElapsed = 0;
+    runtimeElapsed = 0;
     secondsElapsed = 0;
     device = 0;
     setting = 0;
@@ -209,10 +209,13 @@ source. */
 /* Send out switch status */
             send_response("ds",(int)get_switch_control_bits());
             if (is_recording()) record_single("ds",(int)get_switch_control_bits(),writeFileHandle);
-/* Send out running test information. This is always sent during a test
-run even if no time limit has been set to indicate an active test run. */
-            if (testRunning) send_response("dR",timeElapsed);
-            if (testStarted) send_response("dr",secondsElapsed);
+/* Send out running test information. This is always sent during a test run even
+if no time limit has been set to indicate an active test run. */
+            if (testStarted)
+            {
+                send_response("dR",runtimeElapsed);
+                send_response("dr",secondsElapsed);
+            }
             send_response("dX",testRunning);
         }
 	}
@@ -268,6 +271,7 @@ load/panel). */
                 {
                     testStarted = true;
                     secondsElapsed = 0;
+                    runtimeElapsed = 0;
                     testRunning = true;
                 }
                 break;
@@ -281,7 +285,6 @@ load/panel). */
                     set_switch(0, setting);
                 }
                 testRunning = false;
-                timeElapsed = 0;
                 break;
             }
 /* Rn Reset an interface. Set a timer to expire after 250ms at which time the
@@ -598,8 +601,8 @@ void timer_proc(void)
             secondsElapsed++;
         if (testRunning)
         {
-            timeElapsed++;
-            if (((testType == 2) && (timeElapsed > timeLimit))
+            runtimeElapsed++;
+            if (((testType == 2) && (runtimeElapsed > timeLimit))
                 || (voltage[device-1] < voltageLimit))
             {
                 testRunning = false;
